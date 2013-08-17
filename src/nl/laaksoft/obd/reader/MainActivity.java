@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
+
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -45,7 +46,7 @@ public class MainActivity extends Activity
         tvMain2 = (TextView) findViewById(R.id.tvMain2);
         edtPrimary = (EditText) findViewById(R.id.edtPrimary);
         edtSecondary = (EditText) findViewById(R.id.edtSecondary);
-        tvSent = (TextView) findViewById(R.id.lblSent);
+        tvSent = (TextView) findViewById(R.id.tvSent);
         tvReceived = (TextView) findViewById(R.id.tvReceived);
 
         btnQuery = (Button) findViewById(R.id.btnQuery);
@@ -63,7 +64,10 @@ public class MainActivity extends Activity
 
                 try
                 {
-                    sendObdCommand(cmd);
+                    if (m_Socket != null)
+                    {
+                        sendObdCommand(cmd);
+                    }
                 }
                 catch (IOException e)
                 {
@@ -89,8 +93,28 @@ public class MainActivity extends Activity
     }
 
     /**************************************************************************/
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+
+        stopObdConnection();
+    }
+
+    /**************************************************************************/
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+
+        stopObdConnection();
+    }
+
+    /**************************************************************************/
     public void startObdConnection() throws Exception
     {
+        Log.e(TAG, "Start ODB connecting");
+
         final BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         final UUID SPP = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
@@ -120,7 +144,17 @@ public class MainActivity extends Activity
         try
         {
             m_Socket = dev.createRfcommSocketToServiceRecord(SPP);
+        }
+        catch (IOException e)
+        {
+            throw new Exception("Could not create socket");
+        }
+
+        try
+        {
+            Log.e(TAG, "Connecting");
             m_Socket.connect();
+            Log.e(TAG, "Connecting Done");
         }
         catch (IOException e)
         {
@@ -151,6 +185,7 @@ public class MainActivity extends Activity
             try
             {
                 m_Socket.close();
+                m_Socket = null;
             }
             catch (IOException e)
             {
@@ -164,7 +199,6 @@ public class MainActivity extends Activity
     private String sendObdCommand(String cmd) throws IOException
     {
         tvSent.setText(cmd);
-        tvMain1.setText("Sending: " + cmd);
 
         InputStream stdin = m_Socket.getInputStream();
         OutputStream stdout = m_Socket.getOutputStream();
@@ -173,23 +207,17 @@ public class MainActivity extends Activity
         stdout.write(cmdcr.getBytes());
         stdout.flush();
 
-        StringBuilder res = new StringBuilder();
+        String ans = "";
 
         // read until next prompt '>' arrives
         while (true)
         {
-            tvMain1.setText("Reading char");
-            byte b = (byte) (stdin.read());
+            char b = (char) (stdin.read());
             if (b == '>')
                 break;
 
-            tvMain1.setText("Read char " + b);
-            res.append(b);
+            ans += b;
         }
-
-        String ans = res.toString();
-
-        tvMain1.setText("Read answer " + ans);
 
         tvReceived.setText(ans);
 
