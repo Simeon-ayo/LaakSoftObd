@@ -2,5 +2,6 @@
 <resources>
 
     <string name="app_name">OBD II Reader</string>
+    <string name="unknown">-----</string>
 
 </resources>

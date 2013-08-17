@@ -6,9 +6,17 @@
     android:orientation="vertical" >
 
     <TextView
-        android:id="@+id/tvMain"
+        android:id="@+id/tvMain1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="@string/unknown"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <TextView
+        android:id="@+id/tvMain2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/unknown"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
 </LinearLayout>

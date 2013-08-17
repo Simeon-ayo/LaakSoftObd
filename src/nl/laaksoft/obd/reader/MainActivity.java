@@ -6,6 +6,7 @@ package nl.laaksoft.obd.reader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Set;
 import java.util.UUID;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -17,23 +18,26 @@ import android.widget.TextView;
 import android.widget.Toast;
 import nl.laaksoft.obd.reader.R;
 
+/******************************************************************************/
 /**
  * The main activity.
  */
 public class MainActivity extends Activity
 {
     private static final String TAG = "MainActivity";
-    private BluetoothSocket m_Sock;
-    private TextView tvMain;
+    private BluetoothSocket m_Socket = null;
+    private TextView tvMain1;
+    private TextView tvMain2;
 
+    /**************************************************************************/
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
-        tvMain = (TextView) findViewById(R.id.tvMain);
-        tvMain.setText("Started");
+        tvMain1 = (TextView) findViewById(R.id.tvMain1);
+        tvMain2 = (TextView) findViewById(R.id.tvMain2);
 
         try
         {
@@ -41,52 +45,92 @@ public class MainActivity extends Activity
         }
         catch (Exception e)
         {
-            Log.e(TAG, "There was an error while establishing connection. -> " + e.getMessage());
-            Toast.makeText(getApplicationContext(), "No Bluetooth", Toast.LENGTH_LONG).show();
-            tvMain.setText("Unavailable");
+            Log.e(TAG, "No connection: " + e.getMessage());
+            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+            tvMain1.setText(e.getMessage());
+            stopObdConnection();
         }
     }
 
+    /**************************************************************************/
     public void startObdConnection() throws Exception
     {
         final BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         final UUID SPP = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-        tvMain.setText("StartObdConnection");
-
-        if (mBluetoothAdapter == null || mBluetoothAdapter.isEnabled())
+        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled())
         {
-            throw new Exception("No bluetooth adapter enabled");
+            throw new Exception("Bluetooth disabled");
         }
 
-        BluetoothDevice dev = null;
+        String bd_address = "";
 
-        /* Let's roll */
-        tvMain.setText("Getting Adapter");
-        dev = mBluetoothAdapter.getRemoteDevice("OBD2");
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+        if (pairedDevices.size() > 0)
+        {
+            // Loop through paired devices
+            for (BluetoothDevice device : pairedDevices)
+                if (device.getName().equals("OBDII"))
+                    bd_address = device.getAddress();
+        }
 
-        tvMain.setText("Getting Socket");
-        m_Sock = dev.createRfcommSocketToServiceRecord(SPP);
+        if (bd_address.equals(""))
+        {
+            throw new Exception("Not paired with OBDII");
+        }
 
-        tvMain.setText("Connecting");
-        m_Sock.connect();
+        /* The OBD is known, see if it's nearby */
+        BluetoothDevice dev = mBluetoothAdapter.getRemoteDevice(bd_address);
+        try
+        {
+            m_Socket = dev.createRfcommSocketToServiceRecord(SPP);
+            m_Socket.connect();
+        }
+        catch (IOException e)
+        {
+            throw new Exception("OBDII not in range");
+        }
 
-        sendObdCommand("AT Z"); // reset
-        sendObdCommand("AT E0"); // echo off
-        sendObdCommand("AT L0"); // linefeed off
-        sendObdCommand("AT S0 62"); // timeout in 4ms quants
-        sendObdCommand("AT SP 0"); // select protocol automatic
+        String ans;
 
-        String ans = sendObdCommand("01 46"); // get temperature
-        tvMain.setText("Temperature " + ans);
+        ans = sendObdCommand("AT Z"); // reset
+        ans = sendObdCommand("AT E0"); // echo off
+        ans = sendObdCommand("AT L0"); // linefeed off
+        ans = sendObdCommand("AT ST 62"); // timeout in 4ms quants
+        ans = sendObdCommand("AT SP 0"); // select protocol automatic
+        ans = sendObdCommand("01 05"); // dummy data to do auto-discover
+
+        ans = sendObdCommand("AT RV"); // get voltage
+        tvMain1.setText("Voltage " + ans);
+
+        ans = sendObdCommand("01 05"); // get cooling temperature
+        tvMain2.setText("Temperature " + ans);
     }
 
+    /**************************************************************************/
+    public void stopObdConnection()
+    {
+        if (m_Socket != null)
+        {
+            try
+            {
+                m_Socket.close();
+            }
+            catch (IOException e)
+            {
+                // ignore
+            }
+        }
+
+    }
+
+    /**************************************************************************/
     private String sendObdCommand(String cmd) throws IOException
     {
-        tvMain.setText("Sending: " + cmd);
+        tvMain1.setText("Sending: " + cmd);
 
-        InputStream stdin = m_Sock.getInputStream();
-        OutputStream stdout = m_Sock.getOutputStream();
+        InputStream stdin = m_Socket.getInputStream();
+        OutputStream stdout = m_Socket.getOutputStream();
 
         String cmdcr = cmd + '\r';
         stdout.write(cmdcr.getBytes());
@@ -94,19 +138,19 @@ public class MainActivity extends Activity
 
         StringBuilder res = new StringBuilder();
 
-        // read until '>' arrives
+        // read until next prompt '>' arrives
         while (true)
         {
-            tvMain.setText("Reading char");
+            tvMain1.setText("Reading char");
             byte b = (byte) (stdin.read());
             if (b == '>')
                 break;
 
-            tvMain.setText("Read char " + b);
+            tvMain1.setText("Read char " + b);
             res.append(b);
         }
 
-        tvMain.setText("Read answer " + res.toString());
+        tvMain1.setText("Read answer " + res.toString());
 
         return res.toString();
     }
