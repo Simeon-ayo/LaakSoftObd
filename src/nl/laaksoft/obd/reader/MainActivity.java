@@ -14,6 +14,9 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import nl.laaksoft.obd.reader.R;
@@ -26,8 +29,10 @@ public class MainActivity extends Activity
 {
     private static final String TAG = "MainActivity";
     private BluetoothSocket m_Socket = null;
-    private TextView tvMain1;
-    private TextView tvMain2;
+    private TextView tvMain1, tvMain2;
+    private EditText edtPrimary, edtSecondary;
+    private TextView tvSent, tvReceived;
+    private Button btnQuery;
 
     /**************************************************************************/
     @Override
@@ -38,6 +43,37 @@ public class MainActivity extends Activity
         setContentView(R.layout.main);
         tvMain1 = (TextView) findViewById(R.id.tvMain1);
         tvMain2 = (TextView) findViewById(R.id.tvMain2);
+        edtPrimary = (EditText) findViewById(R.id.edtPrimary);
+        edtSecondary = (EditText) findViewById(R.id.edtSecondary);
+        tvSent = (TextView) findViewById(R.id.tvSent);
+        tvReceived = (TextView) findViewById(R.id.tvReceived);
+
+        btnQuery = (Button) findViewById(R.id.btnQuery);
+        btnQuery.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View v)
+            {
+                int primary = Integer.parseInt(edtPrimary.getText().toString());
+                int secondary = Integer.parseInt(edtSecondary.getText().toString());
+
+                String cmd;
+
+                cmd = Integer.toHexString(0x100 | primary).substring(1) + " "
+                        + Integer.toHexString(0x100 | secondary).substring(1);
+
+                try
+                {
+                    sendObdCommand(cmd);
+                }
+                catch (IOException e)
+                {
+                    Log.e(TAG, "No connection: " + e.getMessage());
+                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG)
+                            .show();
+                    tvMain1.setText(e.getMessage());
+                }
+            }
+        });
 
         try
         {
@@ -127,6 +163,7 @@ public class MainActivity extends Activity
     /**************************************************************************/
     private String sendObdCommand(String cmd) throws IOException
     {
+        tvSent.setText(cmd);
         tvMain1.setText("Sending: " + cmd);
 
         InputStream stdin = m_Socket.getInputStream();
@@ -150,8 +187,12 @@ public class MainActivity extends Activity
             res.append(b);
         }
 
-        tvMain1.setText("Read answer " + res.toString());
+        String ans = res.toString();
 
-        return res.toString();
+        tvMain1.setText("Read answer " + ans);
+
+        tvReceived.setText(ans);
+
+        return ans;
     }
 }
