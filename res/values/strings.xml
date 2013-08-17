@@ -8,5 +8,7 @@
     <string name="sent">Sent</string>
     <string name="received">Received</string>
     <string name="query">Query</string>
+    <string name="defaultMode">1</string>
+    <string name="defaultPID">5</string>
 
 </resources>

@@ -45,7 +45,7 @@ public class MainActivity extends Activity
         tvMain2 = (TextView) findViewById(R.id.tvMain2);
         edtPrimary = (EditText) findViewById(R.id.edtPrimary);
         edtSecondary = (EditText) findViewById(R.id.edtSecondary);
-        tvSent = (TextView) findViewById(R.id.tvSent);
+        tvSent = (TextView) findViewById(R.id.lblSent);
         tvReceived = (TextView) findViewById(R.id.tvReceived);
 
         btnQuery = (Button) findViewById(R.id.btnQuery);
