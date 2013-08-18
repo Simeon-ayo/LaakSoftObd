@@ -5,81 +5,70 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-    <TextView
-        android:id="@+id/tvMain1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/unknown"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    <TextView
-        android:id="@+id/tvMain2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/unknown"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    <TextView
-        android:id="@+id/lblPrimary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/primary" />
-
-    <EditText
-        android:id="@+id/edtPrimary"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="number"
-        android:text="@string/defaultMode" >
-
-        <requestFocus />
-    </EditText>
-
-    <TextView
-        android:id="@+id/secondary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/secondary" />
-
-    <EditText
-        android:id="@+id/edtSecondary"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="number"
-        android:text="@string/defaultPID" />
-
-    <TextView
-        android:id="@+id/lblSent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/sent" />
-
-    <TextView
-        android:id="@+id/tvSent"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/unknown"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    <TextView
-        android:id="@+id/lblReceived"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/received" />
-
-    <TextView
-        android:id="@+id/tvReceived"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/unknown"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
     <Button
         android:id="@+id/btnQuery"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/query" />
+
+    <TextView
+        android:id="@+id/textView00"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/unknown" />
+
+    <TextView
+        android:id="@+id/TextView01"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/unknown" />
+
+    <TextView
+        android:id="@+id/TextView02"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/unknown" />
+
+    <TextView
+        android:id="@+id/TextView03"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/unknown" />
+
+    <TextView
+        android:id="@+id/TextView04"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/unknown" />
+
+    <TextView
+        android:id="@+id/TextView05"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/unknown" />
+
+    <TextView
+        android:id="@+id/TextView06"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/unknown" />
+
+    <TextView
+        android:id="@+id/TextView07"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/unknown" />
+
+    <TextView
+        android:id="@+id/TextView08"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/unknown" />
+
+    <TextView
+        android:id="@+id/TextView09"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/unknown" />
 
 </LinearLayout>

@@ -3,24 +3,16 @@
  */
 package nl.laaksoft.obd.reader;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Set;
-import java.util.UUID;
+import java.text.DecimalFormat;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-import nl.laaksoft.obd.reader.R;
 
 /******************************************************************************/
 /**
@@ -29,11 +21,16 @@ import nl.laaksoft.obd.reader.R;
 public class MainActivity extends Activity
 {
     private static final String TAG = "MainActivity";
-    private BluetoothSocket m_Socket = null;
-    private TextView tvMain1, tvMain2;
-    private EditText edtPrimary, edtSecondary;
-    private TextView tvSent, tvReceived;
     private Button btnQuery;
+    private ObdConnection obd;
+    private TextView textView00;
+    private TextView textView01;
+    private TextView textView02;
+    private TextView textView03;
+    private TextView textView04;
+    private TextView textView05;
+    private TextView textView06;
+    private TextView textView07;
 
     /**************************************************************************/
     @Override
@@ -42,53 +39,28 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
-        tvMain1 = (TextView) findViewById(R.id.tvMain1);
-        tvMain2 = (TextView) findViewById(R.id.tvMain2);
-        edtPrimary = (EditText) findViewById(R.id.edtPrimary);
-        edtSecondary = (EditText) findViewById(R.id.edtSecondary);
-        tvSent = (TextView) findViewById(R.id.tvSent);
-        tvReceived = (TextView) findViewById(R.id.tvReceived);
-
         btnQuery = (Button) findViewById(R.id.btnQuery);
-        btnQuery.setOnClickListener(new View.OnClickListener()
-        {
-            public void onClick(View v)
-            {
-                int primary = Integer.parseInt(edtPrimary.getText().toString());
-                int secondary = Integer.parseInt(edtSecondary.getText().toString());
+        btnQuery.setOnClickListener(onClickQuery);
 
-                String cmd;
+        textView00 = (TextView) findViewById(R.id.textView00);
+        textView01 = (TextView) findViewById(R.id.TextView01);
+        textView02 = (TextView) findViewById(R.id.TextView02);
+        textView03 = (TextView) findViewById(R.id.TextView03);
+        textView04 = (TextView) findViewById(R.id.TextView04);
+        textView05 = (TextView) findViewById(R.id.TextView05);
+        textView06 = (TextView) findViewById(R.id.TextView06);
+        textView07 = (TextView) findViewById(R.id.TextView07);
 
-                cmd = Integer.toHexString(0x100 | primary).substring(1) + " "
-                        + Integer.toHexString(0x100 | secondary).substring(1);
-
-                try
-                {
-                    if (m_Socket != null)
-                    {
-                        sendObdCommand(cmd);
-                    }
-                }
-                catch (IOException e)
-                {
-                    Log.e(TAG, "No connection: " + e.getMessage());
-                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG)
-                            .show();
-                    tvMain1.setText(e.getMessage());
-                }
-            }
-        });
-
+        obd = new ObdConnection();
         try
         {
-            startObdConnection();
+            obd.startObdConnection();
         }
         catch (Exception e)
         {
             Log.e(TAG, "No connection: " + e.getMessage());
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-            tvMain1.setText(e.getMessage());
-            stopObdConnection();
+            obd.stopObdConnection();
         }
     }
 
@@ -98,7 +70,7 @@ public class MainActivity extends Activity
     {
         super.onDestroy();
 
-        stopObdConnection();
+        obd.stopObdConnection();
     }
 
     /**************************************************************************/
@@ -107,120 +79,49 @@ public class MainActivity extends Activity
     {
         super.onPause();
 
-        stopObdConnection();
+        obd.stopObdConnection();
     }
 
     /**************************************************************************/
-    public void startObdConnection() throws Exception
+    OnClickListener onClickQuery = new OnClickListener()
     {
-        Log.e(TAG, "Start ODB connecting");
-
-        final BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        final UUID SPP = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-
-        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled())
+        @Override
+        public void onClick(View v)
         {
-            throw new Exception("Bluetooth disabled");
+            double value = 0;
+            String text = "";
+
+            value = obd.getEngineLoad();
+            text = new DecimalFormat("#").format(value);
+            textView00.setText("1:4 Enginge load = " + text + " %");
+
+            value = obd.getCoolingTemperature();
+            text = new DecimalFormat("#").format(value);
+            textView01.setText("1:5 Cooling water = " + text + " C");
+
+            value = obd.getIntakePressure();
+            text = new DecimalFormat("#").format(value);
+            textView02.setText("1:B Intake pressure = " + text + " kPa");
+
+            value = obd.getEngineRpm();
+            text = new DecimalFormat("#").format(value);
+            textView03.setText("1:C Engine speed = " + text + " rpm");
+
+            value = obd.getVehicleSpeed();
+            text = new DecimalFormat("#").format(value);
+            textView04.setText("1:D Vehicle speed = " + text + " km/h");
+
+            value = obd.getIntakeTemperature();
+            text = new DecimalFormat("#").format(value);
+            textView05.setText("1:F Intake temperature = " + text + " C");
+
+            value = obd.getMafRate();
+            text = new DecimalFormat("#").format(value);
+            textView06.setText("1:10 MAF rate = " + text + " g/s");
+
+            value = obd.getRailPressure();
+            text = new DecimalFormat("#").format(value);
+            textView07.setText("1:23 Rail pressure = " + text + " kPa");
         }
-
-        String bd_address = "";
-
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-        if (pairedDevices.size() > 0)
-        {
-            // Loop through paired devices
-            for (BluetoothDevice device : pairedDevices)
-                if (device.getName().equals("OBDII"))
-                    bd_address = device.getAddress();
-        }
-
-        if (bd_address.equals(""))
-        {
-            throw new Exception("Not paired with OBDII");
-        }
-
-        /* The OBD is known, see if it's nearby */
-        BluetoothDevice dev = mBluetoothAdapter.getRemoteDevice(bd_address);
-        try
-        {
-            m_Socket = dev.createRfcommSocketToServiceRecord(SPP);
-        }
-        catch (IOException e)
-        {
-            throw new Exception("Could not create socket");
-        }
-
-        try
-        {
-            Log.e(TAG, "Connecting");
-            m_Socket.connect();
-            Log.e(TAG, "Connecting Done");
-        }
-        catch (IOException e)
-        {
-            throw new Exception("OBDII not in range");
-        }
-
-        String ans;
-
-        ans = sendObdCommand("AT Z"); // reset
-        ans = sendObdCommand("AT E0"); // echo off
-        ans = sendObdCommand("AT L0"); // linefeed off
-        ans = sendObdCommand("AT ST 62"); // timeout in 4ms quants
-        ans = sendObdCommand("AT SP 0"); // select protocol automatic
-        ans = sendObdCommand("01 05"); // dummy data to do auto-discover
-
-        ans = sendObdCommand("AT RV"); // get voltage
-        tvMain1.setText("Voltage " + ans);
-
-        ans = sendObdCommand("01 05"); // get cooling temperature
-        tvMain2.setText("Temperature " + ans);
-    }
-
-    /**************************************************************************/
-    public void stopObdConnection()
-    {
-        if (m_Socket != null)
-        {
-            try
-            {
-                m_Socket.close();
-                m_Socket = null;
-            }
-            catch (IOException e)
-            {
-                // ignore
-            }
-        }
-
-    }
-
-    /**************************************************************************/
-    private String sendObdCommand(String cmd) throws IOException
-    {
-        tvSent.setText(cmd);
-
-        InputStream stdin = m_Socket.getInputStream();
-        OutputStream stdout = m_Socket.getOutputStream();
-
-        String cmdcr = cmd + '\r';
-        stdout.write(cmdcr.getBytes());
-        stdout.flush();
-
-        String ans = "";
-
-        // read until next prompt '>' arrives
-        while (true)
-        {
-            char b = (char) (stdin.read());
-            if (b == '>')
-                break;
-
-            ans += b;
-        }
-
-        tvReceived.setText(ans);
-
-        return ans;
-    }
+    };
 }

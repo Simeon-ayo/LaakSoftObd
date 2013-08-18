@@ -3,12 +3,6 @@
 
     <string name="app_name">OBD II Reader</string>
     <string name="unknown">-----</string>
-    <string name="secondary">PID</string>
-    <string name="primary">Mode</string>
-    <string name="sent">Sent</string>
-    <string name="received">Received</string>
     <string name="query">Query</string>
-    <string name="defaultMode">1</string>
-    <string name="defaultPID">5</string>
 
 </resources>
