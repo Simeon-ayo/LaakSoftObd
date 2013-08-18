@@ -107,6 +107,19 @@ public class ObdConnection
     }
 
     /**************************************************************************/
+    public void updateData(ObdData data)
+    {
+        data.m_EngineLoad = getEngineLoad();
+        data.m_CoolingTemperature = getCoolingTemperature();
+        data.m_IntakePressure = getIntakePressure();
+        data.m_EngineRpm = getEngineRpm();
+        data.m_VehicleSpeed = getVehicleSpeed();
+        data.m_IntakeTemperature = getIntakeTemperature();
+        data.m_MafRate = getMafRate();
+        data.m_RailPressure = getRailPressure();
+    }
+
+    /**************************************************************************/
     private String sendObdCommand(String cmd) throws IOException
     {
         InputStream stdin = m_Socket.getInputStream();
@@ -126,6 +139,24 @@ public class ObdConnection
                 break;
 
             ans += b;
+        }
+        return ans;
+    }
+
+    /**************************************************************************/
+    public String testProtocol()
+    {
+        String ans = "";
+        try
+        {
+            if (m_Connected)
+                ans = sendObdCommand("01 05");
+            else
+                ans = "Not connected";
+        }
+        catch (IOException e)
+        {
+            ans = "Exception";
         }
         return ans;
     }

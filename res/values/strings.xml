@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">OBD II Reader</string>
-    <string name="unknown">-----</string>
-    <string name="query">Query</string>
+    <string name="app_name">LaakSoftObd</string>
 
 </resources>
