@@ -174,7 +174,7 @@ public class ObdConnection
                 ans = sendObdCommand("01 05");
             // return is 41 05 XX, temp is XX-40 celcius
             else
-                ans = "41 05 72\r\r";
+                ans = "41 05 68\r\r";
 
             ans = ans.substring(6, 6 + 2);
             temperature = Integer.parseInt(ans, 16) - 40;
@@ -224,7 +224,7 @@ public class ObdConnection
                 ans = sendObdCommand("01 0C");
             // return is 41 0C XX YY, rpm is (XX*256 + YY)/4 rpm
             else
-                ans = "41 0C 10 20\r\r";
+                ans = "41 0C 26 20\r\r";
 
             anst = ans.substring(6, 6 + 2);
             rpm = Integer.parseInt(anst, 16) * 256;
