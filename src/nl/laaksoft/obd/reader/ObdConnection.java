@@ -101,12 +101,6 @@ public class ObdConnection
     }
 
     /**************************************************************************/
-    public boolean isConnected()
-    {
-        return m_Connected;
-    }
-
-    /**************************************************************************/
     public void updateData(ObdData data)
     {
         data.m_EngineLoad = getEngineLoad();
@@ -144,25 +138,7 @@ public class ObdConnection
     }
 
     /**************************************************************************/
-    public String testProtocol()
-    {
-        String ans = "";
-        try
-        {
-            if (m_Connected)
-                ans = sendObdCommand("01 05");
-            else
-                ans = "Not connected";
-        }
-        catch (IOException e)
-        {
-            ans = "Exception";
-        }
-        return ans;
-    }
-
-    /**************************************************************************/
-    public double getEngineLoad()
+    private double getEngineLoad()
     {
         String ans;
         double load = 0;
@@ -187,7 +163,7 @@ public class ObdConnection
     }
 
     /**************************************************************************/
-    public double getCoolingTemperature()
+    private double getCoolingTemperature()
     {
         String ans;
         double temperature = 0;
@@ -212,7 +188,7 @@ public class ObdConnection
     }
 
     /**************************************************************************/
-    public double getIntakePressure()
+    private double getIntakePressure()
     {
         String ans;
         double pressure = 0;
@@ -237,7 +213,7 @@ public class ObdConnection
     }
 
     /**************************************************************************/
-    public double getEngineRpm()
+    private double getEngineRpm()
     {
         String ans, anst;
         double rpm = 0;
@@ -267,7 +243,7 @@ public class ObdConnection
     }
 
     /**************************************************************************/
-    public double getVehicleSpeed()
+    private double getVehicleSpeed()
     {
         String ans;
         double speed = 0;
@@ -292,7 +268,7 @@ public class ObdConnection
     }
 
     /**************************************************************************/
-    public double getIntakeTemperature()
+    private double getIntakeTemperature()
     {
         String ans;
         double temperature = 0;
@@ -317,7 +293,7 @@ public class ObdConnection
     }
 
     /**************************************************************************/
-    public double getMafRate()
+    private double getMafRate()
     {
         String ans, anst;
         double rate = 0;
@@ -347,7 +323,7 @@ public class ObdConnection
     }
 
     /**************************************************************************/
-    public double getRailPressure()
+    private double getRailPressure()
     {
         String ans, anst;
         double pressure = 0;
@@ -375,5 +351,4 @@ public class ObdConnection
 
         return pressure;
     }
-
 }
