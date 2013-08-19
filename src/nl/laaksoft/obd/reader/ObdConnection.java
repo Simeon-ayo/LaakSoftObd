@@ -103,14 +103,15 @@ public class ObdConnection
     /**************************************************************************/
     public void updateData(ObdData data)
     {
-        data.m_EngineLoad = getEngineLoad();
-        data.m_CoolingTemperature = getCoolingTemperature();
-        data.m_IntakePressure = getIntakePressure();
-        data.m_EngineRpm = getEngineRpm();
         data.m_VehicleSpeed = getVehicleSpeed();
-        data.m_IntakeTemperature = getIntakeTemperature();
-        data.m_MafRate = getMafRate();
-        data.m_RailPressure = getRailPressure();
+        data.m_EngineRpm = getEngineRpm();
+        data.m_EngineLoad = getEngineLoad();
+        //data.m_CoolingTemperature = getCoolingTemperature();
+        
+        //data.m_IntakePressure = getIntakePressure();
+        //data.m_IntakeTemperature = getIntakeTemperature();
+        //data.m_MafRate = getMafRate();
+        //data.m_RailPressure = getRailPressure();
     }
 
     /**************************************************************************/

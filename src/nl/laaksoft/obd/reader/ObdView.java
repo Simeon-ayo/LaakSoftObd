@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.Align;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
@@ -11,9 +12,14 @@ import android.view.View;
 
 public class ObdView extends View
 {
-    private Paint myPaint;
+    private Paint paintLines;
     private Rect bounds;
     private RectF area;
+    private Paint paintSmallText;
+    private Paint paintPie;
+    private Paint paintLargeText;
+    private Paint paintPieWarning;
+    private Paint paintPieDanger;
 
     public ObdView(Context context)
     {
@@ -35,9 +41,43 @@ public class ObdView extends View
 
     private void Init(Context appcontext)
     {
-        myPaint = new Paint();
+        paintLines = new Paint();
+        paintLargeText = new Paint();
+        paintSmallText = new Paint();
+        paintPie = new Paint();
+        paintPieWarning = new Paint();
+        paintPieDanger = new Paint();
         bounds = new Rect();
         area = new RectF();
+
+        paintLines.setAntiAlias(true);
+        paintLines.setStyle(Paint.Style.STROKE);
+        paintLines.setColor(Color.WHITE);
+        paintLines.setStrokeWidth(0.02f);
+
+        paintPie.setAntiAlias(true);
+        paintPie.setStyle(Paint.Style.FILL);
+        paintPie.setColor(Color.rgb(0, 160, 0));
+
+        paintPieWarning.setAntiAlias(true);
+        paintPieWarning.setStyle(Paint.Style.FILL);
+        paintPieWarning.setColor(Color.rgb(160, 160, 0));
+
+        paintPieDanger.setAntiAlias(true);
+        paintPieDanger.setStyle(Paint.Style.FILL);
+        paintPieDanger.setColor(Color.rgb(160, 0, 0));
+
+        paintLargeText.setAntiAlias(true);
+        paintLargeText.setTextSize(0.3f);
+        paintLargeText.setTextAlign(Align.RIGHT);
+        paintLargeText.setStyle(Paint.Style.FILL);
+        paintLargeText.setColor(Color.WHITE);
+
+        paintSmallText.setAntiAlias(true);
+        paintSmallText.setTextSize(0.2f);
+        paintSmallText.setTextAlign(Align.CENTER);
+        paintSmallText.setStyle(Paint.Style.FILL);
+        paintSmallText.setColor(Color.WHITE);
     }
 
     @Override
@@ -46,144 +86,94 @@ public class ObdView extends View
         MainActivity mainact = (MainActivity) getContext();
         String text;
 
-        myPaint.setStrokeWidth(1);
-        myPaint.setAntiAlias(true);
-        myPaint.setTextSize(25);
-
         canvas.getClipBounds(bounds);
         int xc = bounds.centerX();
         int yc = bounds.centerY();
-        int rad = (int) (Math.min(xc, yc) * 0.9);
+        int rad = (int) (Math.min(xc, yc / 2) * 0.8);
 
         /**************************************/
-        /* draw speed */
-        area.set(0.1f * rad, 0.1f * rad, 0.9f * rad, 0.9f * rad);
+        // draw speed dial
+        canvas.setMatrix(null);
+        canvas.translate(xc, yc / 2);
+        canvas.scale(rad, rad);
+        area.set(-1, -1, 1, 1);
 
+        // draw speed pie
         float speed = (float) mainact.m_ObdData.m_VehicleSpeed;
-        if (speed < 50)
-            myPaint.setColor(Color.GREEN);
-        else if (speed < 80)
-            myPaint.setColor(Color.YELLOW);
-        else if (speed < 100)
-            myPaint.setColor(Color.rgb(255, 128, 0));
-        else
-            myPaint.setColor(Color.RED);
+        canvas.drawArc(area, 0f, 225.0f * speed / 140.0f, true, paintPie);
 
-        myPaint.setStyle(Paint.Style.FILL);
-        canvas.drawArc(area, 0f, 225.0f * speed / 140.0f, true, myPaint);
+        // draw speed text
+        text = String.format("%.0f", speed);
+        canvas.drawText(text, 0.8f, -0.2f, paintLargeText);
 
-        myPaint.setStrokeWidth(5);
-        myPaint.setStyle(Paint.Style.STROKE);
-        myPaint.setColor(Color.WHITE);
-        canvas.drawArc(area, 0f, 225f, true, myPaint);
+        // draw boilerplate
+        // draw dial
+        canvas.drawArc(area, 0f, 225f, true, paintLines);
 
-        myPaint.setStyle(Paint.Style.FILL);
-        text = String.format("%.0f kph", speed);
-        canvas.drawText(text, 0.5f * rad, 0.4f * rad, myPaint);
+        // draw text border
+        canvas.drawRect(0.1f, -0.5f, 1.0f, -0.1f, paintLines);
+
+        // draw markers
+        canvas.save();
+        for (int i = 10; i < 140; i += 20)
+        {
+            canvas.rotate(225 / 7.0f);
+            canvas.drawLine(0.8f, 0, 1.0f, 0, paintLines);
+        }
+        canvas.restore();
+
+        for (int i = 2; i <= 12; i += 2)
+        {
+            float xp = (float) (0.7 * Math.cos(i * 225 / 14.0 * Math.PI / 180.0));
+            float yp = (float) (0.7 * Math.sin(i * 225 / 14.0 * Math.PI / 180.0));
+            text = String.format("%d", i);
+            canvas.drawText(text, xp, yp, paintSmallText);
+        }
 
         /**************************************/
-        /* draw rpm */
-        area.set(1.1f * rad, 0.1f * rad, 1.9f * rad, 0.9f * rad);
+        // draw rpm dial
+        canvas.setMatrix(null);
+        canvas.translate(xc, 3 * yc / 2);
+        canvas.scale(rad, rad);
+        area.set(-1, -1, 1, 1);
 
         float rpm = (float) mainact.m_ObdData.m_EngineRpm;
-        if (rpm < 2000)
-            myPaint.setColor(Color.GREEN);
-        else if (rpm < 3000)
-            myPaint.setColor(Color.YELLOW);
-        else if (rpm < 3500)
-            myPaint.setColor(Color.rgb(255, 128, 0));
+        Paint myPaint = paintPie;
+        if (rpm > 3000 || rpm < 1200)
+            myPaint = paintPieDanger;
+        else if (rpm > 2500 || rpm < 1500)
+            myPaint = paintPieWarning;
         else
-            myPaint.setColor(Color.RED);
-        myPaint.setStyle(Paint.Style.FILL);
+            myPaint = paintPie;
         canvas.drawArc(area, 0f, 225.0f * rpm / 5000.0f, true, myPaint);
 
-        myPaint.setStrokeWidth(5);
-        myPaint.setStyle(Paint.Style.STROKE);
-        myPaint.setColor(Color.WHITE);
-        canvas.drawArc(area, 0f, 225f, true, myPaint);
+        // draw speed text
+        text = String.format("%.0f", rpm);
+        canvas.drawText(text, 0.9f, -0.2f, paintLargeText);
 
-        myPaint.setStyle(Paint.Style.FILL);
-        text = String.format("%.0f rpm", rpm);
-        canvas.drawText(text, 1.5f * rad, 0.4f * rad, myPaint);
+        // draw boilerplate
 
-        /**************************************/
-        /* draw engine load */
-        area.set(0.1f * rad, 1.1f * rad, 0.9f * rad, 1.9f * rad);
+        // draw dial
+        canvas.drawArc(area, 0f, 225f, true, paintLines);
 
-        myPaint.setColor(Color.GREEN);
-        float load = (float) mainact.m_ObdData.m_EngineLoad;
-        myPaint.setStyle(Paint.Style.FILL);
-        canvas.drawArc(area, 0f, 225.0f * load / 100.0f, true, myPaint);
+        // draw text border
+        canvas.drawRect(0.1f, -0.5f, 1.0f, -0.1f, paintLines);
 
-        myPaint.setStrokeWidth(5);
-        myPaint.setStyle(Paint.Style.STROKE);
-        myPaint.setColor(Color.WHITE);
-        canvas.drawArc(area, 0f, 225f, true, myPaint);
+        // draw markers
+        canvas.save();
+        for (int i = 1000; i < 5000; i += 1000)
+        {
+            canvas.rotate(225 / 5.0f);
+            canvas.drawLine(0.8f, 0, 1.0f, 0, paintLines);
+        }
+        canvas.restore();
 
-        myPaint.setStyle(Paint.Style.FILL);
-        text = String.format("%.0f %%", load);
-        canvas.drawText(text, 0.5f * rad, 1.4f * rad, myPaint);
-
-        /**************************************/
-        /* draw cooling */
-        area.set(1.1f * rad, 1.1f * rad, 1.9f * rad, 1.9f * rad);
-
-        float temp = (float) mainact.m_ObdData.m_CoolingTemperature;
-        if (temp < 50)
-            myPaint.setColor(Color.RED);
-        else if (temp < 60)
-            myPaint.setColor(Color.rgb(255, 128, 0));
-        else if (temp < 65)
-            myPaint.setColor(Color.YELLOW);
-        else
-            myPaint.setColor(Color.GREEN);
-
-        myPaint.setStyle(Paint.Style.FILL);
-        canvas.drawArc(area, 0f, 225.0f * temp / 100.0f, true, myPaint);
-
-        myPaint.setStrokeWidth(5);
-        myPaint.setStyle(Paint.Style.STROKE);
-        myPaint.setColor(Color.WHITE);
-        canvas.drawArc(area, 0f, 225f, true, myPaint);
-
-        text = String.format("%.0f C", temp);
-        myPaint.setStyle(Paint.Style.FILL);
-        canvas.drawText(text, 1.5f * rad, 1.4f * rad, myPaint);
-
-        /**************************************/
-        /* draw rail pressure */
-        area.set(0.1f * rad, 2.1f * rad, 0.9f * rad, 2.9f * rad);
-
-        float railp = (float) mainact.m_ObdData.m_RailPressure;
-        myPaint.setColor(Color.GREEN);
-        myPaint.setStyle(Paint.Style.FILL);
-        canvas.drawArc(area, 0f, 225.0f * railp / 600000.0f, true, myPaint);
-
-        myPaint.setStrokeWidth(5);
-        myPaint.setStyle(Paint.Style.STROKE);
-        myPaint.setColor(Color.WHITE);
-        canvas.drawArc(area, 0f, 225f, true, myPaint);
-
-        myPaint.setStyle(Paint.Style.FILL);
-        text = String.format("%.1f MPa", railp / 1000.0);
-        canvas.drawText(text, 0.5f * rad, 2.4f * rad, myPaint);
-
-        /**************************************/
-        /* draw maf rate */
-        area.set(1.1f * rad, 2.1f * rad, 1.9f * rad, 2.9f * rad);
-
-        float mafr = (float) mainact.m_ObdData.m_MafRate;
-        myPaint.setColor(Color.GREEN);
-        myPaint.setStyle(Paint.Style.FILL);
-        canvas.drawArc(area, 0f, 225.0f * mafr / 655.0f, true, myPaint);
-
-        myPaint.setStrokeWidth(5);
-        myPaint.setStyle(Paint.Style.STROKE);
-        myPaint.setColor(Color.WHITE);
-        canvas.drawArc(area, 0f, 225f, true, myPaint);
-
-        myPaint.setStyle(Paint.Style.FILL);
-        text = String.format("%.0f gps", mafr);
-        canvas.drawText(text, 1.5f * rad, 2.4f * rad, myPaint);
+        for (int i = 1; i <= 4; i += 1)
+        {
+            float xp = (float) (0.7 * Math.cos(i * 225 / 5.0 * Math.PI / 180.0));
+            float yp = (float) (0.7 * Math.sin(i * 225 / 5.0 * Math.PI / 180.0));
+            text = String.format("%d", i);
+            canvas.drawText(text, xp, yp, paintSmallText);
+        }
     }
 }
