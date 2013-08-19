@@ -16,10 +16,11 @@ public class ObdView extends View
     private Rect bounds;
     private RectF area;
     private Paint paintSmallText;
-    private Paint paintPie;
+    private Paint paintPieNormal;
     private Paint paintLargeText;
     private Paint paintPieWarning;
     private Paint paintPieDanger;
+    private Paint paintSmallTextBlue;
 
     public ObdView(Context context)
     {
@@ -44,9 +45,10 @@ public class ObdView extends View
         paintLines = new Paint();
         paintLargeText = new Paint();
         paintSmallText = new Paint();
-        paintPie = new Paint();
+        paintPieNormal = new Paint();
         paintPieWarning = new Paint();
         paintPieDanger = new Paint();
+        paintSmallTextBlue = new Paint();
         bounds = new Rect();
         area = new RectF();
 
@@ -55,9 +57,9 @@ public class ObdView extends View
         paintLines.setColor(Color.WHITE);
         paintLines.setStrokeWidth(0.02f);
 
-        paintPie.setAntiAlias(true);
-        paintPie.setStyle(Paint.Style.FILL);
-        paintPie.setColor(Color.rgb(0, 160, 0));
+        paintPieNormal.setAntiAlias(true);
+        paintPieNormal.setStyle(Paint.Style.FILL);
+        paintPieNormal.setColor(Color.rgb(128, 128, 140));
 
         paintPieWarning.setAntiAlias(true);
         paintPieWarning.setStyle(Paint.Style.FILL);
@@ -78,6 +80,12 @@ public class ObdView extends View
         paintSmallText.setTextAlign(Align.CENTER);
         paintSmallText.setStyle(Paint.Style.FILL);
         paintSmallText.setColor(Color.WHITE);
+
+        paintSmallTextBlue.setAntiAlias(true);
+        paintSmallTextBlue.setTextSize(0.2f);
+        paintSmallTextBlue.setTextAlign(Align.CENTER);
+        paintSmallTextBlue.setStyle(Paint.Style.FILL);
+        paintSmallTextBlue.setColor(Color.rgb(64, 160, 255));
     }
 
     @Override
@@ -85,6 +93,14 @@ public class ObdView extends View
     {
         MainActivity mainact = (MainActivity) getContext();
         String text;
+
+        float speed = (float) mainact.m_ObdData.m_VehicleSpeed;
+        float rpm = (float) mainact.m_ObdData.m_EngineRpm;
+        float ratio = 0;
+        if (speed > 0)
+        {
+            ratio = rpm / speed;
+        }
 
         canvas.getClipBounds(bounds);
         int xc = bounds.centerX();
@@ -94,13 +110,12 @@ public class ObdView extends View
         /**************************************/
         // draw speed dial
         canvas.setMatrix(null);
-        canvas.translate(xc, yc / 2);
+        canvas.translate(xc, yc / 2 - 20);
         canvas.scale(rad, rad);
         area.set(-1, -1, 1, 1);
 
         // draw speed pie
-        float speed = (float) mainact.m_ObdData.m_VehicleSpeed;
-        canvas.drawArc(area, 0f, 225.0f * speed / 140.0f, true, paintPie);
+        canvas.drawArc(area, 0f, 225.0f * speed / 140.0f, true, paintPieNormal);
 
         // draw speed text
         text = String.format("%.0f", speed);
@@ -129,22 +144,25 @@ public class ObdView extends View
             text = String.format("%d", i);
             canvas.drawText(text, xp, yp, paintSmallText);
         }
+        canvas.drawText("kph", -0.9f, 0.9f, paintSmallTextBlue);
+
+        text = String.format("%.1f", ratio);
+        canvas.drawText(text, 0.5f, -0.6f, paintSmallTextBlue);
 
         /**************************************/
         // draw rpm dial
         canvas.setMatrix(null);
-        canvas.translate(xc, 3 * yc / 2);
+        canvas.translate(xc, 3 * yc / 2 - 20);
         canvas.scale(rad, rad);
         area.set(-1, -1, 1, 1);
 
-        float rpm = (float) mainact.m_ObdData.m_EngineRpm;
-        Paint myPaint = paintPie;
+        Paint myPaint = paintPieNormal;
         if (rpm > 3000 || rpm < 1200)
             myPaint = paintPieDanger;
         else if (rpm > 2500 || rpm < 1500)
             myPaint = paintPieWarning;
         else
-            myPaint = paintPie;
+            myPaint = paintPieNormal;
         canvas.drawArc(area, 0f, 225.0f * rpm / 5000.0f, true, myPaint);
 
         // draw speed text
@@ -175,5 +193,26 @@ public class ObdView extends View
             text = String.format("%d", i);
             canvas.drawText(text, xp, yp, paintSmallText);
         }
+        canvas.drawText("rpm", -0.9f, 0.9f, paintSmallTextBlue);
+
+        /* draw gear */
+        int gear = 0;
+        if (130 - (130 - 65) / 2 < ratio && ratio < 130 + (130 - 65) / 2)
+            gear = 1;
+        else if (65 - (65 - 43) / 2 < ratio && ratio <= 65 + (130 - 65) / 2)
+            gear = 2;
+        else if (43 - (43 - 32) / 2 < ratio && ratio <= 43 + (65 - 43) / 2)
+            gear = 3;
+        else if (32 - (32 - 26) / 2 < ratio && ratio <= 32 + (43 - 32) / 2)
+            gear = 4;
+        else if (26 - (32 - 26) / 2 < ratio && ratio <= 26 + (32 - 26) / 2)
+            gear = 5;
+
+        if (gear > 0)
+            text = String.format("%d", gear);
+        else
+            text = "---";
+
+        canvas.drawText(text, 0.5f, -0.6f, paintSmallTextBlue);
     }
 }
