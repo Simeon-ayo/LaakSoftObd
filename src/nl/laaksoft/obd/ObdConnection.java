@@ -1,4 +1,4 @@
-package nl.laaksoft.obd.reader;
+package nl.laaksoft.obd;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,14 +13,14 @@ import android.util.Log;
 
 public class ObdConnection
 {
-    private static final String TAG = "ObdConnection";
+    private static final String TAG = "OBD";
     private BluetoothSocket m_Socket = null;
     private boolean m_Connected = false;
 
     /**************************************************************************/
     public void startObdConnection() throws Exception
     {
-        Log.e(TAG, "Start ODB connecting");
+        Log.d(TAG, "Start ODB connecting");
 
         final BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         final UUID SPP = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -59,9 +59,9 @@ public class ObdConnection
 
         try
         {
-            Log.e(TAG, "Connecting");
+            Log.d(TAG, "Connecting");
             m_Socket.connect();
-            Log.e(TAG, "Connecting Done");
+            Log.d(TAG, "Connected");
         }
         catch (IOException e)
         {
@@ -101,11 +101,11 @@ public class ObdConnection
     }
 
     /**************************************************************************/
-    public void updateData(ObdData data)
+    public void updateData(VehicleData data)
     {
         data.m_VehicleSpeed = getVehicleSpeed();
         data.m_EngineRpm = getEngineRpm();
-        //data.m_EngineLoad = getEngineLoad();
+        // data.m_EngineLoad = getEngineLoad();
 
         // data.m_CoolingTemperature = getCoolingTemperature();
         // data.m_IntakePressure = getIntakePressure();
@@ -225,7 +225,7 @@ public class ObdConnection
                 ans = sendObdCommand("01 0C");
             // return is 41 0C XX YY, rpm is (XX*256 + YY)/4 rpm
             else
-                ans = "41 0C 26 20\r\r";
+                ans = "41 0C 22 20\r\r";
 
             anst = ans.substring(6, 6 + 2);
             rpm = Integer.parseInt(anst, 16) * 256;
