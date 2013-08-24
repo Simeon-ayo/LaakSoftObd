@@ -7,6 +7,7 @@ import android.util.Log;
 public class VehicleData
 {
     private static final String TAG = "OBD";
+    private static final double OPT_RPM = 1850;
 
     // Raw readings
     public double m_VehicleSpeed;
@@ -47,8 +48,8 @@ public class VehicleData
         m_GearString.put(Gear.GEAR5, "5th");
 
         m_MaxSpeed = 80.0;
-        m_CurrentGear = Gear.GEAR1;
-        m_OptimumGear = Gear.GEAR1;
+        m_CurrentGear = Gear.GEAR0;
+        m_OptimumGear = Gear.GEAR0;
     }
 
     /*************************************************************************/
@@ -81,15 +82,15 @@ public class VehicleData
         }
         else
         {
-            // See which gear is closest to 1750 (max torque of the engine)
+            // See which gear is closest to OPT_RPM (max torque of the engine)
             double dMax = 10000;
             for (Gear gear : Gear.values())
             {
                 double rpm = m_VehicleSpeed * m_GearRatios.get(gear);
 
-                if (Math.abs(m_EngineRpm - rpm) < dMax)
+                if (Math.abs(OPT_RPM - rpm) < dMax)
                 {
-                    dMax = Math.abs(m_EngineRpm - rpm);
+                    dMax = Math.abs(OPT_RPM - rpm);
                     m_OptimumGear = gear;
                 }
             }

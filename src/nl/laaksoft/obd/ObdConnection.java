@@ -11,7 +11,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.util.Log;
 
-public class ObdConnection
+public class ObdConnection implements IObdConnection
 {
     private static final String TAG = "OBD";
     private BluetoothSocket m_Socket = null;
@@ -103,8 +103,10 @@ public class ObdConnection
     /**************************************************************************/
     public void updateData(VehicleData data)
     {
-        data.m_VehicleSpeed = getVehicleSpeed();
-        data.m_EngineRpm = getEngineRpm();
+        //Apply low-pass filtering
+        data.m_VehicleSpeed = data.m_VehicleSpeed * 0.2 + 0.8 * getVehicleSpeed();
+        data.m_EngineRpm = data.m_EngineRpm * 0.2 + 0.8 * getEngineRpm();
+        
         // data.m_EngineLoad = getEngineLoad();
 
         // data.m_CoolingTemperature = getCoolingTemperature();

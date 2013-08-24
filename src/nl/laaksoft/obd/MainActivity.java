@@ -21,7 +21,7 @@ import android.widget.Toast;
 public class MainActivity extends Activity implements OnTouchListener
 {
     private static final String TAG = "OBD";
-    private ObdConnection m_Obd;
+    private IObdConnection m_Obd;
     public VehicleData m_ObdData;
     private ObdView m_View;
     private Handler m_Handler;
@@ -70,8 +70,10 @@ public class MainActivity extends Activity implements OnTouchListener
             Log.e(TAG, "No connection: " + e.getMessage());
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
             m_Obd.stopObdConnection();
-        }
 
+            // fall back to simulation
+            m_Obd = new ObdConnectionSim();
+        }
     }
 
     /**************************************************************************/
@@ -124,12 +126,24 @@ public class MainActivity extends Activity implements OnTouchListener
 
     /**************************************************************************/
     @Override
-    public boolean onTouch(View v, MotionEvent event)
+    public boolean onTouch(View v, MotionEvent ev)
     {
-        if (event.getAction() == MotionEvent.ACTION_DOWN)
+        switch (ev.getAction())
         {
-            m_ObdData.m_MaxSpeed = m_ObdData.m_VehicleSpeed;
-            return true;
+            case MotionEvent.ACTION_DOWN:
+                m_ObdData.m_MaxSpeed = m_ObdData.m_VehicleSpeed;
+                return true;
+            case MotionEvent.ACTION_UP:
+                return true;
+            case MotionEvent.ACTION_MOVE:
+
+                double dx = ev.getX() - ev.getHistoricalX(ev.getHistorySize() - 1);
+
+                m_ObdData.m_MaxSpeed -= (dx * Math.abs(dx)) / 10.0;
+
+                m_ObdData.m_MaxSpeed = Math.max(m_ObdData.m_MaxSpeed, 0);
+                m_ObdData.m_MaxSpeed = Math.min(m_ObdData.m_MaxSpeed, 140);
+                return true;
         }
         return false;
     }
