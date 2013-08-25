@@ -31,6 +31,7 @@ public class ObdConnectionSim implements IObdConnection
             if (m_SimGear == Gear.GEAR0)
             {
                 m_ObdData.m_VehicleSpeed = 0;
+                m_ObdData.m_EngineLoad = 50;
                 m_ObdData.m_EngineRpm += 25;
                 if (m_ObdData.m_EngineRpm > 800)
                 {
@@ -41,6 +42,7 @@ public class ObdConnectionSim implements IObdConnection
             else
             {
                 m_ObdData.m_VehicleSpeed += 0.5;
+                m_ObdData.m_EngineLoad = 90;
                 m_ObdData.m_EngineRpm = m_ObdData.m_VehicleSpeed
                         * m_ObdData.m_GearRatios.get(m_SimGear);
 
@@ -59,6 +61,7 @@ public class ObdConnectionSim implements IObdConnection
         else
         {
             m_ObdData.m_VehicleSpeed -= 1;
+            m_ObdData.m_EngineLoad = 0;
             m_ObdData.m_EngineRpm = m_ObdData.m_VehicleSpeed
                     * m_ObdData.m_GearRatios.get(m_SimGear);
 

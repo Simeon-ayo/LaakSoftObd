@@ -103,11 +103,10 @@ public class ObdConnection implements IObdConnection
     /**************************************************************************/
     public void updateData(VehicleData data)
     {
-        //Apply low-pass filtering
-        data.m_VehicleSpeed = data.m_VehicleSpeed * 0.2 + 0.8 * getVehicleSpeed();
-        data.m_EngineRpm = data.m_EngineRpm * 0.2 + 0.8 * getEngineRpm();
-        
-        // data.m_EngineLoad = getEngineLoad();
+        // Apply low-pass filtering
+        data.m_VehicleSpeed = data.m_VehicleSpeed * 0.4 + 0.6 * getVehicleSpeed();
+        data.m_EngineRpm = data.m_EngineRpm * 0.4 + 0.6 * getEngineRpm();
+        data.m_EngineLoad = data.m_EngineLoad * 0.4 + 0.6 * getEngineLoad();
 
         // data.m_CoolingTemperature = getCoolingTemperature();
         // data.m_IntakePressure = getIntakePressure();

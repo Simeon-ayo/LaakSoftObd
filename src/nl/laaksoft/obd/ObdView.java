@@ -147,9 +147,111 @@ public class ObdView extends View
         Paint myPaint;
 
         canvas.getClipBounds(bounds);
-        int xc = bounds.centerX();
-        int yc = bounds.centerY();
-        int rad = (int) (Math.min(xc, yc / 2) * 0.8);
+        int w = bounds.width();
+        int h = bounds.height();
+        int rad = (int) (Math.min(w, h / 3) * 0.45);
+
+        /*********************************************************************/
+        /** flow dial **/
+        /*********************************************************************/
+
+        float load = (float) mainact.m_ObdData.m_EngineLoad;
+        canvas.setMatrix(null);
+        canvas.translate(w / 2, 1 * h / 6);
+        canvas.scale(rad, rad);
+        area.set(-1, -1, 1, 1);
+
+        // draw load pie
+        canvas.drawArc(area, 0f, 225.0f * load / 100.0f, true, paintPieNormal);
+
+        // draw load text
+        text = String.format("%.0f", load);
+        canvas.drawText(text, 0.9f, -0.2f, paintLargeTextWhite);
+
+        // draw dial contour
+        canvas.drawArc(area, 0f, 225f, true, paintLinesWhite);
+
+        // draw text border
+        canvas.drawRect(0.1f, -0.5f, 1.0f, -0.1f, paintLinesWhite);
+
+        // draw load marker ticks
+        canvas.save();
+        for (int i = 20; i < 100; i += 20)
+        {
+            canvas.rotate(225 / 5.0f);
+            canvas.drawLine(0.8f, 0, 1.0f, 0, paintLinesWhite);
+        }
+        canvas.restore();
+
+        // draw rpm marker numbers
+        for (int i = 20; i <= 80; i += 20)
+        {
+            float xp = (float) (0.7 * Math.cos(i * 225 / 100.0 * Math.PI / 180.0));
+            float yp = (float) (0.7 * Math.sin(i * 225 / 100.0 * Math.PI / 180.0));
+            text = String.format("%d", i);
+            canvas.drawText(text, xp, yp, paintSmallTextWhite);
+        }
+
+        // draw dial label
+        canvas.drawText("load", -1.2f, 0.95f, paintSmallTextBlue);
+
+        /*********************************************************************/
+        /** Rpm dial **/
+        /*********************************************************************/
+
+        float rpm = (float) mainact.m_ObdData.m_EngineRpm;
+        canvas.setMatrix(null);
+        canvas.translate(w / 2, 3 * h / 6);
+        canvas.scale(rad, rad);
+        area.set(-1, -1, 1, 1);
+
+        // draw rpm pie
+        myPaint = paintPieNormal;
+        if (mainact.m_ObdData.m_OptimumGear != mainact.m_ObdData.m_CurrentGear)
+        {
+            myPaint = paintLargeTextAmber;
+        }
+        canvas.drawArc(area, 0f, 225.0f * rpm / 5000.0f, true, myPaint);
+
+        // draw speed text
+        text = String.format("%.0f", rpm);
+        canvas.drawText(text, 0.9f, -0.2f, paintLargeTextWhite);
+
+        // draw optimum gear
+        myPaint = paintLargeTextBlue;
+        if (mainact.m_ObdData.m_OptimumGear != mainact.m_ObdData.m_CurrentGear)
+        {
+            myPaint = paintLargeTextAmber;
+        }
+        text = mainact.m_ObdData.m_GearString.get(mainact.m_ObdData.m_OptimumGear);
+        canvas.drawText(text, 0.9f, -0.6f, myPaint);
+
+        // draw dial contour
+        canvas.drawArc(area, 0f, 225f, true, paintLinesWhite);
+
+        // draw text border
+        canvas.drawRect(0.1f, -0.5f, 1.0f, -0.1f, paintLinesWhite);
+
+        // draw rpm marker ticks
+        canvas.save();
+        for (int i = 1000; i < 5000; i += 1000)
+        {
+            canvas.rotate(225 / 5.0f);
+            canvas.drawLine(0.8f, 0, 1.0f, 0, paintLinesWhite);
+        }
+        canvas.restore();
+
+        // draw rpm marker numbers
+        for (int i = 1; i <= 4; i += 1)
+        {
+            float xp = (float) (0.7 * Math.cos(i * 225 / 5.0 * Math.PI / 180.0));
+            float yp = (float) (0.7 * Math.sin(i * 225 / 5.0 * Math.PI / 180.0));
+            text = String.format("%d", i);
+            canvas.drawText(text, xp, yp, paintSmallTextWhite);
+        }
+
+        // draw dial label
+        canvas.drawText("rpm", -1.2f, 0.95f, paintSmallTextBlue);
 
         /*********************************************************************/
         /** Speed dial **/
@@ -157,7 +259,7 @@ public class ObdView extends View
 
         float speed = (float) mainact.m_ObdData.m_VehicleSpeed;
         canvas.setMatrix(null);
-        canvas.translate(xc, yc / 2 - 20);
+        canvas.translate(w / 2, 5 * h / 6);
         canvas.scale(rad, rad);
         area.set(-1, -1, 1, 1);
 
@@ -219,64 +321,6 @@ public class ObdView extends View
         }
 
         // draw dial label
-        canvas.drawText("kph", -0.9f, 0.9f, paintSmallTextBlue);
-
-        /*********************************************************************/
-        /** Rpm dial **/
-        /*********************************************************************/
-
-        float rpm = (float) mainact.m_ObdData.m_EngineRpm;
-        canvas.setMatrix(null);
-        canvas.translate(xc, 3 * yc / 2 - 20);
-        canvas.scale(rad, rad);
-        area.set(-1, -1, 1, 1);
-
-        // draw rpm pie
-        myPaint = paintPieNormal;
-        if (mainact.m_ObdData.m_OptimumGear != mainact.m_ObdData.m_CurrentGear)
-        {
-            myPaint = paintLargeTextAmber;
-        }
-        canvas.drawArc(area, 0f, 225.0f * rpm / 5000.0f, true, myPaint);
-
-        // draw speed text
-        text = String.format("%.0f", rpm);
-        canvas.drawText(text, 0.9f, -0.2f, paintLargeTextWhite);
-
-        // draw optimum gear
-        myPaint = paintLargeTextBlue;
-        if (mainact.m_ObdData.m_OptimumGear != mainact.m_ObdData.m_CurrentGear)
-        {
-            myPaint = paintLargeTextAmber;
-        }
-        text = mainact.m_ObdData.m_GearString.get(mainact.m_ObdData.m_OptimumGear);
-        canvas.drawText(text, 0.9f, -0.6f, myPaint);
-
-        // draw dial contour
-        canvas.drawArc(area, 0f, 225f, true, paintLinesWhite);
-
-        // draw text border
-        canvas.drawRect(0.1f, -0.5f, 1.0f, -0.1f, paintLinesWhite);
-
-        // draw rpm marker ticks
-        canvas.save();
-        for (int i = 1000; i < 5000; i += 1000)
-        {
-            canvas.rotate(225 / 5.0f);
-            canvas.drawLine(0.8f, 0, 1.0f, 0, paintLinesWhite);
-        }
-        canvas.restore();
-
-        // draw rpm marker numbers
-        for (int i = 1; i <= 4; i += 1)
-        {
-            float xp = (float) (0.7 * Math.cos(i * 225 / 5.0 * Math.PI / 180.0));
-            float yp = (float) (0.7 * Math.sin(i * 225 / 5.0 * Math.PI / 180.0));
-            text = String.format("%d", i);
-            canvas.drawText(text, xp, yp, paintSmallTextWhite);
-        }
-
-        // draw dial label
-        canvas.drawText("rpm", -0.9f, 0.9f, paintSmallTextBlue);
+        canvas.drawText("kph", -1.2f, 0.95f, paintSmallTextBlue);
     }
 }

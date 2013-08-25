@@ -39,7 +39,7 @@ public class MainActivity extends Activity implements OnTouchListener
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        m_WakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK
+        m_WakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK
                 | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE, "My Tag");
 
         m_View = new ObdView(this);
@@ -131,7 +131,6 @@ public class MainActivity extends Activity implements OnTouchListener
         switch (ev.getAction())
         {
             case MotionEvent.ACTION_DOWN:
-                m_ObdData.m_MaxSpeed = m_ObdData.m_VehicleSpeed;
                 return true;
             case MotionEvent.ACTION_UP:
                 return true;
