@@ -32,6 +32,10 @@ public class ObdView extends View
     private Paint paintPieWarning;
     private Paint paintPieDanger;
 
+    private Paint paintSmallTextGreen;
+
+    private Paint paintLargeTextRed;
+
     public ObdView(Context context)
     {
         super(context);
@@ -67,6 +71,8 @@ public class ObdView extends View
         paintPieDanger = new Paint();
         paintSmallTextBlue = new Paint();
         paintLargeTextBlue = new Paint();
+        paintSmallTextGreen = new Paint();
+        paintLargeTextRed = new Paint();
 
         paintLinesWhite.setAntiAlias(true);
         paintLinesWhite.setStyle(Paint.Style.STROKE);
@@ -75,7 +81,7 @@ public class ObdView extends View
 
         paintLinesGreen.setAntiAlias(true);
         paintLinesGreen.setStyle(Paint.Style.STROKE);
-        paintLinesGreen.setColor(Color.GREEN);
+        paintLinesGreen.setColor(Color.rgb(64, 192, 64));
         paintLinesGreen.setStrokeWidth(0.03f);
 
         paintPieNormal.setAntiAlias(true);
@@ -84,11 +90,11 @@ public class ObdView extends View
 
         paintPieWarning.setAntiAlias(true);
         paintPieWarning.setStyle(Paint.Style.FILL);
-        paintPieWarning.setColor(Color.rgb(160, 160, 0));
+        paintPieWarning.setColor(Color.rgb(192, 160, 0));
 
         paintPieDanger.setAntiAlias(true);
         paintPieDanger.setStyle(Paint.Style.FILL);
-        paintPieDanger.setColor(Color.rgb(160, 0, 0));
+        paintPieDanger.setColor(Color.rgb(192, 0, 0));
 
         paintLargeTextWhite.setAntiAlias(true);
         paintLargeTextWhite.setTextSize(0.3f);
@@ -100,7 +106,13 @@ public class ObdView extends View
         paintLargeTextAmber.setTextSize(0.3f);
         paintLargeTextAmber.setTextAlign(Align.RIGHT);
         paintLargeTextAmber.setStyle(Paint.Style.FILL);
-        paintLargeTextAmber.setColor(Color.rgb(255, 160, 0));
+        paintLargeTextAmber.setColor(Color.rgb(192, 160, 0));
+
+        paintLargeTextRed.setAntiAlias(true);
+        paintLargeTextRed.setTextSize(0.3f);
+        paintLargeTextRed.setTextAlign(Align.RIGHT);
+        paintLargeTextRed.setStyle(Paint.Style.FILL);
+        paintLargeTextRed.setColor(Color.rgb(192, 0, 0));
 
         paintSmallTextWhite.setAntiAlias(true);
         paintSmallTextWhite.setTextSize(0.2f);
@@ -114,6 +126,12 @@ public class ObdView extends View
         paintSmallTextBlue.setStyle(Paint.Style.FILL);
         paintSmallTextBlue.setColor(Color.rgb(64, 160, 255));
 
+        paintSmallTextGreen.setAntiAlias(true);
+        paintSmallTextGreen.setTextSize(0.3f);
+        paintSmallTextGreen.setTextAlign(Align.RIGHT);
+        paintSmallTextGreen.setStyle(Paint.Style.FILL);
+        paintSmallTextGreen.setColor(Color.rgb(64, 192, 64));
+
         paintLargeTextBlue.setAntiAlias(true);
         paintLargeTextBlue.setTextSize(0.3f);
         paintLargeTextBlue.setTextAlign(Align.RIGHT);
@@ -126,6 +144,7 @@ public class ObdView extends View
     {
         MainActivity mainact = (MainActivity) getContext();
         String text;
+        Paint myPaint;
 
         canvas.getClipBounds(bounds);
         int xc = bounds.centerX();
@@ -143,7 +162,12 @@ public class ObdView extends View
         area.set(-1, -1, 1, 1);
 
         // draw speed pie
-        canvas.drawArc(area, 0f, 225.0f * speed / 140.0f, true, paintPieNormal);
+        myPaint = paintPieNormal;
+        if (speed > mainact.m_ObdData.m_MaxSpeed + 5)
+            myPaint = paintPieDanger;
+        else if (speed > mainact.m_ObdData.m_MaxSpeed)
+            myPaint = paintPieWarning;
+        canvas.drawArc(area, 0f, 225.0f * speed / 140.0f, true, myPaint);
 
         // draw max speed tick
         canvas.save();
@@ -153,18 +177,22 @@ public class ObdView extends View
         canvas.restore();
 
         // draw speed text
-        Paint myPaint = paintLargeTextWhite;
-        if (mainact.m_ObdData.m_VehicleSpeed > mainact.m_ObdData.m_MaxSpeed)
+        myPaint = paintLargeTextWhite;
+        if (mainact.m_ObdData.m_VehicleSpeed > mainact.m_ObdData.m_MaxSpeed + 5)
+        {
+            myPaint = paintLargeTextRed;
+        }
+        else if (mainact.m_ObdData.m_VehicleSpeed > mainact.m_ObdData.m_MaxSpeed)
         {
             myPaint = paintLargeTextAmber;
         }
 
-        text = String.format("%.0f", speed);
-        canvas.drawText(text, 0.8f, -0.2f, myPaint);
+        text = String.format("%.1f", speed);
+        canvas.drawText(text, 0.9f, -0.2f, myPaint);
 
         // draw max speed text
-        text = String.format("%.0f", mainact.m_ObdData.m_MaxSpeed);
-        canvas.drawText(text, 0.8f, -0.6f, paintLargeTextBlue);
+        text = String.format("%.1f", mainact.m_ObdData.m_MaxSpeed);
+        canvas.drawText(text, 0.9f, -0.6f, paintSmallTextGreen);
 
         // draw dial contour
         canvas.drawArc(area, 0f, 225f, true, paintLinesWhite);
@@ -204,7 +232,12 @@ public class ObdView extends View
         area.set(-1, -1, 1, 1);
 
         // draw rpm pie
-        canvas.drawArc(area, 0f, 225.0f * rpm / 5000.0f, true, paintPieNormal);
+        myPaint = paintPieNormal;
+        if (mainact.m_ObdData.m_OptimumGear != mainact.m_ObdData.m_CurrentGear)
+        {
+            myPaint = paintLargeTextAmber;
+        }
+        canvas.drawArc(area, 0f, 225.0f * rpm / 5000.0f, true, myPaint);
 
         // draw speed text
         text = String.format("%.0f", rpm);
