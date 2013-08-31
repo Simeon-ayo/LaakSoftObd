@@ -52,7 +52,7 @@ public class VehicleData
         m_GearString.put(Gear.GEAR4, "4th");
         m_GearString.put(Gear.GEAR5, "5th");
 
-        m_MaxSpeed = 80.0;
+        m_MaxSpeed = 85.0;
         m_CurrentGear = Gear.GEAR0;
         m_OptimumGear = Gear.GEAR0;
     }

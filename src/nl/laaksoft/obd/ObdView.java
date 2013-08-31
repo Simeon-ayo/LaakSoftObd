@@ -1,5 +1,7 @@
 package nl.laaksoft.obd;
 
+import java.util.Locale;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -37,6 +39,8 @@ public class ObdView extends View
 
     private Paint paintLargeTextRed;
 
+    private Locale locale;
+
     public ObdView(Context context)
     {
         super(context);
@@ -58,6 +62,8 @@ public class ObdView extends View
     private void Init(Context appcontext)
     {
         Log.d(TAG, "View init");
+
+        locale = getResources().getConfiguration().locale;
 
         area = new RectF();
         bounds = new Rect();
@@ -180,7 +186,7 @@ public class ObdView extends View
 
         // draw load text
         area.set(-1, -1, 1, 1);
-        text = String.format("%.0f", load);
+        text = String.format(locale, "%.0f", load);
         canvas.drawText(text, 0.9f, -0.2f, paintLargeTextWhite);
 
         // draw dial contour
@@ -203,7 +209,7 @@ public class ObdView extends View
         {
             float xp = (float) (0.7 * Math.cos(i * 225 / 100.0 * Math.PI / 180.0));
             float yp = (float) (0.7 * Math.sin(i * 225 / 100.0 * Math.PI / 180.0));
-            text = String.format("%d", i);
+            text = String.format(locale, "%d", i);
             canvas.drawText(text, xp, yp, paintSmallTextWhite);
         }
 
@@ -229,7 +235,7 @@ public class ObdView extends View
         canvas.drawArc(area, 0f, 225.0f * rpm / 5000.0f, true, myPaint);
 
         // draw speed text
-        text = String.format("%.0f", rpm);
+        text = String.format(locale, "%.0f", rpm);
         canvas.drawText(text, 0.9f, -0.2f, paintLargeTextWhite);
 
         // draw optimum gear
@@ -261,7 +267,7 @@ public class ObdView extends View
         {
             float xp = (float) (0.7 * Math.cos(i * 225 / 5.0 * Math.PI / 180.0));
             float yp = (float) (0.7 * Math.sin(i * 225 / 5.0 * Math.PI / 180.0));
-            text = String.format("%d", i);
+            text = String.format(locale, "%d", i);
             canvas.drawText(text, xp, yp, paintSmallTextWhite);
         }
 
@@ -304,11 +310,11 @@ public class ObdView extends View
             myPaint = paintLargeTextAmber;
         }
 
-        text = String.format("%.1f", speed);
+        text = String.format(locale, "%.1f", speed);
         canvas.drawText(text, 0.9f, -0.2f, myPaint);
 
         // draw max speed text
-        text = String.format("%.1f", mainact.m_ObdData.m_MaxSpeed);
+        text = String.format(locale, "%.1f", mainact.m_ObdData.m_MaxSpeed);
         canvas.drawText(text, 0.9f, -0.6f, paintSmallTextGreen);
 
         // draw dial contour
@@ -331,7 +337,7 @@ public class ObdView extends View
         {
             float xp = (float) (0.7 * Math.cos(i * 225 / 14.0 * Math.PI / 180.0));
             float yp = (float) (0.7 * Math.sin(i * 225 / 14.0 * Math.PI / 180.0));
-            text = String.format("%d", i);
+            text = String.format(locale, "%d", i);
             canvas.drawText(text, xp, yp, paintSmallTextWhite);
         }
 
