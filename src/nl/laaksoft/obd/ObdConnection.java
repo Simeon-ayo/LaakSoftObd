@@ -105,8 +105,16 @@ public class ObdConnection implements IObdConnection
     {
         // Apply low-pass filtering
         data.m_VehicleSpeed = data.m_VehicleSpeed * 0.4 + 0.6 * getVehicleSpeed();
-        data.m_EngineRpm = data.m_EngineRpm * 0.4 + 0.6 * getEngineRpm();
         data.m_EngineLoad = data.m_EngineLoad * 0.4 + 0.6 * getEngineLoad();
+
+        double enginerpm = data.m_EngineRpm * 0.4 + 0.6 * getEngineRpm();
+        double sampletime = System.currentTimeMillis() / 1000.0;
+
+        data.m_EngineRpmRate = (enginerpm - data.m_EngineRpm)
+                / (sampletime - data.m_LastSampleTime);
+
+        data.m_EngineRpm = enginerpm;
+        data.m_LastSampleTime = sampletime;
 
         // data.m_CoolingTemperature = getCoolingTemperature();
         // data.m_IntakePressure = getIntakePressure();

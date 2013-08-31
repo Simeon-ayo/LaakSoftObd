@@ -13,6 +13,8 @@ public class VehicleData
     public double m_VehicleSpeed;
     public double m_EngineRpm;
     public double m_EngineLoad;
+    public double m_EngineRpmRate;
+    public double m_LastSampleTime;
 
     // Limits
     public double m_MaxSpeed;
@@ -23,6 +25,8 @@ public class VehicleData
     public Gear m_OptimumGear;
     EnumMap<Gear, Double> m_GearRatios = new EnumMap<Gear, Double>(Gear.class);
     EnumMap<Gear, String> m_GearString = new EnumMap<Gear, String>(Gear.class);
+    private double m_SpeedRate;
+    public double m_TargetEngineLoad;
 
     /*************************************************************************/
     public enum Gear
@@ -54,7 +58,7 @@ public class VehicleData
     }
 
     /*************************************************************************/
-    public void calculate()
+    private void calculate_derived_values()
     {
         // Determine rpms for each gear
         if (m_VehicleSpeed != 0)
@@ -83,7 +87,7 @@ public class VehicleData
         }
         else
         {
-            // See which gear is closest to OPT_RPM (max torque of the engine)
+            // See which gear has revs closest to MIN_RPM
             for (Gear gear : Gear.values())
             {
                 double rpm = m_VehicleSpeed * m_GearRatios.get(gear);
@@ -94,5 +98,33 @@ public class VehicleData
                 }
             }
         }
+
+        if (m_CurrentGear != Gear.GEAR0)
+            m_SpeedRate = m_EngineRpmRate / m_GearRatios.get(m_CurrentGear);
+        else
+            m_SpeedRate = 0;
+    }
+
+    /*************************************************************************/
+    private void calculate_speed_controller()
+    {
+        double dSpeedTarget = (m_MaxSpeed - m_VehicleSpeed);
+
+        // clip to 5 km/h per second
+        dSpeedTarget = Math.max(-5.0, Math.min(5.0, dSpeedTarget));
+
+        double error = dSpeedTarget - m_SpeedRate;
+
+        m_TargetEngineLoad = 50 + 10 * error;
+
+        // clip to 0-80%
+        m_TargetEngineLoad = Math.max(0.0, Math.min(80.0, m_TargetEngineLoad));
+    }
+
+    /*************************************************************************/
+    public void calculate()
+    {
+        calculate_derived_values();
+        calculate_speed_controller();
     }
 }

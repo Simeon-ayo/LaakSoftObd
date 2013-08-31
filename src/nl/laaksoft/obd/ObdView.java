@@ -20,6 +20,7 @@ public class ObdView extends View
 
     private Paint paintLinesWhite;
     private Paint paintLinesGreen;
+    private Paint paintLinesGreenThick;
 
     private Paint paintSmallTextWhite;
     private Paint paintLargeTextWhite;
@@ -63,6 +64,7 @@ public class ObdView extends View
 
         paintLinesWhite = new Paint();
         paintLinesGreen = new Paint();
+        paintLinesGreenThick = new Paint();
         paintLargeTextWhite = new Paint();
         paintSmallTextWhite = new Paint();
         paintLargeTextAmber = new Paint();
@@ -83,6 +85,12 @@ public class ObdView extends View
         paintLinesGreen.setStyle(Paint.Style.STROKE);
         paintLinesGreen.setColor(Color.rgb(64, 192, 64));
         paintLinesGreen.setStrokeWidth(0.03f);
+
+        paintLinesGreenThick.setAntiAlias(true);
+        paintLinesGreenThick.setStyle(Paint.Style.STROKE);
+        paintLinesGreenThick.setColor(Color.rgb(64, 192, 64));
+        paintLinesGreenThick.setStrokeWidth(0.1f);
+        // paintLinesGreenThick.setStrokeCap(Paint.Cap.ROUND);
 
         paintPieNormal.setAntiAlias(true);
         paintPieNormal.setStyle(Paint.Style.FILL);
@@ -157,14 +165,21 @@ public class ObdView extends View
 
         float load = (float) mainact.m_ObdData.m_EngineLoad;
         canvas.setMatrix(null);
-        canvas.translate(w / 2, 1 * h / 6);
+        canvas.translate(0.5f * w, 0.14f * h);
         canvas.scale(rad, rad);
         area.set(-1, -1, 1, 1);
 
         // draw load pie
         canvas.drawArc(area, 0f, 225.0f * load / 100.0f, true, paintPieNormal);
 
+        // draw load pie
+        float optload = (float) mainact.m_ObdData.m_TargetEngineLoad;
+        area.set(-1.1f, -1.1f, 1.1f, 1.1f);
+        canvas.drawArc(area, 225.0f * (optload - 5) / 100.0f, 225.0f * (10) / 100.0f, false,
+                paintLinesGreenThick);
+
         // draw load text
+        area.set(-1, -1, 1, 1);
         text = String.format("%.0f", load);
         canvas.drawText(text, 0.9f, -0.2f, paintLargeTextWhite);
 
@@ -201,7 +216,7 @@ public class ObdView extends View
 
         float rpm = (float) mainact.m_ObdData.m_EngineRpm;
         canvas.setMatrix(null);
-        canvas.translate(w / 2, 3 * h / 6);
+        canvas.translate(0.5f * w, 0.47f * h);
         canvas.scale(rad, rad);
         area.set(-1, -1, 1, 1);
 
@@ -259,7 +274,7 @@ public class ObdView extends View
 
         float speed = (float) mainact.m_ObdData.m_VehicleSpeed;
         canvas.setMatrix(null);
-        canvas.translate(w / 2, 5 * h / 6);
+        canvas.translate(0.5f * w, 0.8f * h);
         canvas.scale(rad, rad);
         area.set(-1, -1, 1, 1);
 
