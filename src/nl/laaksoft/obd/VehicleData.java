@@ -25,8 +25,13 @@ public class VehicleData
     public Gear m_OptimumGear;
     EnumMap<Gear, Double> m_GearRatios = new EnumMap<Gear, Double>(Gear.class);
     EnumMap<Gear, String> m_GearString = new EnumMap<Gear, String>(Gear.class);
+    EnumMap<Gear, Double> m_GearMaxRpm = new EnumMap<Gear, Double>(Gear.class);
+
+    // Controller
     private double m_SpeedRate;
     public double m_TargetEngineLoad;
+    public int p_gain;
+    public int i_gain;
 
     /*************************************************************************/
     public enum Gear
@@ -51,6 +56,17 @@ public class VehicleData
         m_GearString.put(Gear.GEAR3, "3rd");
         m_GearString.put(Gear.GEAR4, "4th");
         m_GearString.put(Gear.GEAR5, "5th");
+
+        m_GearMaxRpm.put(Gear.GEAR0, 2000.0);
+        m_GearMaxRpm.put(Gear.GEAR1, m_GearRatios.get(Gear.GEAR1) / m_GearRatios.get(Gear.GEAR2)
+                * MIN_RPM);
+        m_GearMaxRpm.put(Gear.GEAR2, m_GearRatios.get(Gear.GEAR2) / m_GearRatios.get(Gear.GEAR3)
+                * MIN_RPM);
+        m_GearMaxRpm.put(Gear.GEAR3, m_GearRatios.get(Gear.GEAR3) / m_GearRatios.get(Gear.GEAR4)
+                * MIN_RPM);
+        m_GearMaxRpm.put(Gear.GEAR4, m_GearRatios.get(Gear.GEAR4) / m_GearRatios.get(Gear.GEAR5)
+                * MIN_RPM);
+        m_GearMaxRpm.put(Gear.GEAR5, 3000.0);
 
         m_MaxSpeed = 85.0;
         m_CurrentGear = Gear.GEAR0;
@@ -115,7 +131,7 @@ public class VehicleData
 
         double error = dSpeedTarget - m_SpeedRate;
 
-        m_TargetEngineLoad = 50 + 10 * error;
+        m_TargetEngineLoad = i_gain + p_gain * error;
 
         // clip to 0-80%
         m_TargetEngineLoad = Math.max(0.0, Math.min(80.0, m_TargetEngineLoad));

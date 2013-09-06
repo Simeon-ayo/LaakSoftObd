@@ -1,14 +1,17 @@
 package nl.laaksoft.obd;
 
-import preferences.MainPrefsActivity;
 import nl.laaksoft.obd.reader.R;
+import preferences.MainPrefsActivity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,7 +27,8 @@ import android.widget.Toast;
 /**
  * The main activity.
  */
-public class MainActivity extends Activity implements OnTouchListener
+public class MainActivity extends Activity implements OnTouchListener,
+        OnSharedPreferenceChangeListener
 {
     private static final String TAG = "OBD";
     private IObdConnection m_Obd;
@@ -57,6 +61,13 @@ public class MainActivity extends Activity implements OnTouchListener
         m_Handler = new Handler();
 
         m_View.setOnTouchListener(this);
+
+        SharedPreferences app_preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        m_ObdData.p_gain = app_preferences.getInt("P", 5);
+        m_ObdData.i_gain = app_preferences.getInt("I", 0);
+
+        app_preferences.registerOnSharedPreferenceChangeListener(this);
+
     }
 
     /**************************************************************************/
@@ -172,6 +183,23 @@ public class MainActivity extends Activity implements OnTouchListener
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences prefs, String key)
+    {
+        if (key.equals("P"))
+        {
+            Integer p = prefs.getInt(key, 0);
+            m_ObdData.p_gain = p;
+            Log.d(TAG, "P: " + p.toString());
+        }
+        if (key.equals("I"))
+        {
+            Integer i = prefs.getInt(key, 0);
+            m_ObdData.i_gain = i;
+            Log.d(TAG, "I: " + i.toString());
         }
     }
 }
