@@ -156,7 +156,7 @@ public class MainActivity extends Activity implements OnTouchListener,
                 {
                     double dx = ev.getX() - ev.getHistoricalX(ev.getHistorySize() - 1);
 
-                    m_ObdData.m_MaxSpeed -= (dx * Math.abs(dx)) / 10.0;
+                    m_ObdData.m_MaxSpeed += dx;
 
                     m_ObdData.m_MaxSpeed = Math.max(m_ObdData.m_MaxSpeed, 0);
                     m_ObdData.m_MaxSpeed = Math.min(m_ObdData.m_MaxSpeed, 140);
