@@ -104,10 +104,10 @@ public class ObdConnection implements IObdConnection
     public void updateData(VehicleData data)
     {
         // Apply low-pass filtering
-        data.m_VehicleSpeed = data.m_VehicleSpeed * 0.4 + 0.6 * getVehicleSpeed();
-        data.m_EngineLoad = data.m_EngineLoad * 0.4 + 0.6 * getEngineLoad();
+        data.m_VehicleSpeed = data.m_VehicleSpeed * 0.6 + 0.4 * getVehicleSpeed();
+        data.m_EngineLoad = data.m_EngineLoad * 0.6 + 0.4 * getEngineLoad();
 
-        double enginerpm = data.m_EngineRpm * 0.4 + 0.6 * getEngineRpm();
+        double enginerpm = data.m_EngineRpm * 0.6 + 0.4 * getEngineRpm();
         double sampletime = System.currentTimeMillis() / 1000.0;
 
         data.m_EngineRpmRate = (enginerpm - data.m_EngineRpm)

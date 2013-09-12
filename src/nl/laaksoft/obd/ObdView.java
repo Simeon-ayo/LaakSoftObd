@@ -1,6 +1,10 @@
 package nl.laaksoft.obd;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -41,6 +45,9 @@ public class ObdView extends View
     private Paint paintLargeTextRed;
 
     private Locale locale;
+    private SimpleDateFormat sdf;
+
+    private Paint paintLargeTextBlueL;
 
     public ObdView(Context context)
     {
@@ -65,6 +72,7 @@ public class ObdView extends View
         Log.d(TAG, "View init");
 
         locale = getResources().getConfiguration().locale;
+        sdf = new SimpleDateFormat("HHmm", locale);
 
         area = new RectF();
         bounds = new Rect();
@@ -81,6 +89,7 @@ public class ObdView extends View
         paintPieDanger = new Paint();
         paintSmallTextBlue = new Paint();
         paintLargeTextBlue = new Paint();
+        paintLargeTextBlueL = new Paint();
         paintSmallTextGreen = new Paint();
         paintLargeTextRed = new Paint();
 
@@ -92,13 +101,13 @@ public class ObdView extends View
         paintLinesWarning.setAntiAlias(true);
         paintLinesWarning.setStyle(Paint.Style.STROKE);
         paintLinesWarning.setColor(Color.rgb(192, 160, 0));
-        paintLinesWarning.setStrokeWidth(0.04f);
+        paintLinesWarning.setStrokeWidth(0.03f);
         paintLinesWarning.setStrokeCap(Paint.Cap.ROUND);
 
         paintLinesDanger.setAntiAlias(true);
         paintLinesDanger.setStyle(Paint.Style.STROKE);
         paintLinesDanger.setColor(Color.rgb(192, 0, 0));
-        paintLinesDanger.setStrokeWidth(0.04f);
+        paintLinesDanger.setStrokeWidth(0.03f);
         paintLinesDanger.setStrokeCap(Paint.Cap.ROUND);
 
         paintLinesGreenThick.setAntiAlias(true);
@@ -160,6 +169,12 @@ public class ObdView extends View
         paintLargeTextBlue.setTextAlign(Align.RIGHT);
         paintLargeTextBlue.setStyle(Paint.Style.FILL);
         paintLargeTextBlue.setColor(Color.rgb(64, 160, 255));
+
+        paintLargeTextBlueL.setAntiAlias(true);
+        paintLargeTextBlueL.setTextSize(0.3f);
+        paintLargeTextBlueL.setTextAlign(Align.LEFT);
+        paintLargeTextBlueL.setStyle(Paint.Style.FILL);
+        paintLargeTextBlueL.setColor(Color.rgb(64, 160, 255));
     }
 
     @Override
@@ -175,12 +190,28 @@ public class ObdView extends View
         int rad = (int) (Math.min(w, h / 3) * 0.45);
 
         /*********************************************************************/
+        /** time **/
+        /*********************************************************************/
+        canvas.setMatrix(null);
+        canvas.translate(0.00f * w, 0.04f * h);
+        canvas.scale(rad, rad);
+
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date dat = new Date();
+        final String utcTime = sdf.format(dat);
+
+        // draw dial label
+        long frac = dat.getTime() % 60000;
+        String dec = String.format(locale, "%d", frac / 6000);
+        canvas.drawText(utcTime + "." + dec + "z", 0f, 0f, paintLargeTextBlueL);
+
+        /*********************************************************************/
         /** flow dial **/
         /*********************************************************************/
 
         float load = (float) mainact.m_ObdData.m_EngineLoad;
         canvas.setMatrix(null);
-        canvas.translate(0.5f * w, 0.14f * h);
+        canvas.translate(0.35f * w, 0.20f * h);
         canvas.scale(rad, rad);
         area.set(-1, -1, 1, 1);
 
@@ -241,7 +272,7 @@ public class ObdView extends View
 
         float rpm = (float) mainact.m_ObdData.m_EngineRpm;
         canvas.setMatrix(null);
-        canvas.translate(0.5f * w, 0.47f * h);
+        canvas.translate(0.35f * w, 0.50f * h);
         canvas.scale(rad, rad);
         area.set(-1, -1, 1, 1);
 
@@ -315,25 +346,25 @@ public class ObdView extends View
 
         float speed = (float) mainact.m_ObdData.m_VehicleSpeed;
         canvas.setMatrix(null);
-        canvas.translate(0.5f * w, 0.8f * h);
+        canvas.translate(0.35f * w, 0.8f * h);
         canvas.scale(rad, rad);
         area.set(-1, -1, 1, 1);
 
         // draw speed pie
         myPaint = paintPieNormal;
-        if (speed > mainact.m_ObdData.m_MaxSpeed + 5)
+        if (speed > mainact.m_ObdData.m_MaxSpeed + 6)
             myPaint = paintPieDanger;
-        else if (speed > mainact.m_ObdData.m_MaxSpeed)
+        else if (speed > mainact.m_ObdData.m_MaxSpeed + 4)
             myPaint = paintPieWarning;
         canvas.drawArc(area, 0f, 225.0f * speed / 140.0f, true, myPaint);
 
         // draw speed text
         myPaint = paintLargeTextWhite;
-        if (mainact.m_ObdData.m_VehicleSpeed > mainact.m_ObdData.m_MaxSpeed + 5)
+        if (mainact.m_ObdData.m_VehicleSpeed > mainact.m_ObdData.m_MaxSpeed + 6)
         {
             myPaint = paintLargeTextRed;
         }
-        else if (mainact.m_ObdData.m_VehicleSpeed > mainact.m_ObdData.m_MaxSpeed)
+        else if (mainact.m_ObdData.m_VehicleSpeed > mainact.m_ObdData.m_MaxSpeed + 4)
         {
             myPaint = paintLargeTextAmber;
         }
@@ -358,21 +389,23 @@ public class ObdView extends View
         canvas.restore();
 
         // draw dial contour
-        canvas.drawArc(area, 0f, 225f * (float) mainact.m_ObdData.m_MaxSpeed / 140.0f, false,
+        canvas.drawArc(area, 0f, 225f * (float) (mainact.m_ObdData.m_MaxSpeed + 4) / 140.0f, false,
                 paintLinesWhite);
-        canvas.drawArc(area, 225f * (float) mainact.m_ObdData.m_MaxSpeed / 140.0f,
-                225f * 5.0f / 140.0f, false, paintLinesWarning);
-        canvas.drawArc(area, 225f * (float) (mainact.m_ObdData.m_MaxSpeed + 5) / 140.0f,
-                225f * (135.0f - (float) mainact.m_ObdData.m_MaxSpeed) / 140.0f, false,
+
+        canvas.drawArc(area, 225f * ((float) mainact.m_ObdData.m_MaxSpeed + 4) / 140.0f,
+                225f * 2.0f / 140.0f, false, paintLinesWarning);
+
+        canvas.drawArc(area, 225f * (float) (mainact.m_ObdData.m_MaxSpeed + 6) / 140.0f,
+                225f * (135.0f - (float) mainact.m_ObdData.m_MaxSpeed - 6) / 140.0f, false,
                 paintLinesDanger);
 
         // draw kph limit
         canvas.save();
-        canvas.rotate(225 / 7.0f * (float) mainact.m_ObdData.m_MaxSpeed / 20.0f);
+        canvas.rotate(225 / 7.0f * (float) (mainact.m_ObdData.m_MaxSpeed + 4) / 20.0f);
         canvas.drawLine(1.0f, 0, 1.15f, 0, paintLinesWarning);
         canvas.restore();
         canvas.save();
-        canvas.rotate(225 / 7.0f * (float) (mainact.m_ObdData.m_MaxSpeed + 5) / 20.0f);
+        canvas.rotate(225 / 7.0f * (float) (mainact.m_ObdData.m_MaxSpeed + 6) / 20.0f);
         canvas.drawLine(1.0f, 0, 1.2f, 0, paintLinesDanger);
         canvas.restore();
 
@@ -387,5 +420,44 @@ public class ObdView extends View
 
         // draw dial label
         canvas.drawText("kph", -1.2f, 0.95f, paintSmallTextBlue);
+
+        /*********************************************************************/
+        /** Speed strip **/
+        /*********************************************************************/
+
+        canvas.setMatrix(null);
+        canvas.translate(0.85f * w, 0.5f * h);
+        canvas.scale(rad, rad);
+
+        {
+            myPaint = paintPieNormal;
+            if (speed > mainact.m_ObdData.m_MaxSpeed + 6)
+                myPaint = paintPieDanger;
+            else if (speed > mainact.m_ObdData.m_MaxSpeed + 4)
+                myPaint = paintPieWarning;
+
+            float y = (speed - (float) mainact.m_ObdData.m_MaxSpeed) * -6.0f / 20.0f;
+
+            y = Math.min(3, Math.max(-3, y));
+            area.set(-0.2f, y, 0.2f, 3);
+            canvas.drawRect(area, myPaint);
+        }
+
+        area.set(-0.2f, -3f, 0.2f, 3f);
+        canvas.drawRect(area, paintLinesWhite);
+
+        // draw kph markers
+        {
+            float y;
+            y = 0 * -6.0f / 20.0f;
+            canvas.drawLine(-0.3f, y, -0.2f, y, paintLinesWhite);
+            canvas.drawLine(0.3f, y, 0.2f, y, paintLinesWhite);
+            y = 4 * -6.0f / 20.0f;
+            canvas.drawLine(-0.35f, y, -0.2f, y, paintLinesWarning);
+            canvas.drawLine(0.35f, y, 0.2f, y, paintLinesWarning);
+            y = 6 * -6.0f / 20.0f;
+            canvas.drawLine(-0.4f, y, -0.2f, y, paintLinesDanger);
+            canvas.drawLine(0.4f, y, 0.2f, y, paintLinesDanger);
+        }
     }
 }

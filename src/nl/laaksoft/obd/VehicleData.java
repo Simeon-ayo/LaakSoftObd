@@ -68,7 +68,7 @@ public class VehicleData
                 * MIN_RPM);
         m_GearMaxRpm.put(Gear.GEAR5, 3000.0);
 
-        m_MaxSpeed = 85.0;
+        m_MaxSpeed = 80.0;
         m_CurrentGear = Gear.GEAR0;
         m_OptimumGear = Gear.GEAR0;
     }
@@ -119,6 +119,15 @@ public class VehicleData
             m_SpeedRate = m_EngineRpmRate / m_GearRatios.get(m_CurrentGear);
         else
             m_SpeedRate = 0;
+
+        while (m_VehicleSpeed < m_MaxSpeed - 8)
+        {
+            m_MaxSpeed -= 10.0;
+        }
+        while (m_VehicleSpeed > m_MaxSpeed + 8)
+        {
+            m_MaxSpeed += 10.0;
+        }
     }
 
     /*************************************************************************/
