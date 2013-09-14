@@ -67,7 +67,6 @@ public class MainActivity extends Activity implements OnTouchListener,
         m_ObdData.i_gain = app_preferences.getInt("I", 0);
 
         app_preferences.registerOnSharedPreferenceChangeListener(this);
-
     }
 
     /**************************************************************************/

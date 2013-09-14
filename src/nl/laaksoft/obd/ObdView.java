@@ -21,9 +21,6 @@ public class ObdView extends View
 {
     private static final String TAG = "OBD";
 
-    private RectF area;
-    private Rect bounds;
-
     private Paint paintLinesWhite;
     private Paint paintLinesWarning;
     private Paint paintLinesDanger;
@@ -49,6 +46,14 @@ public class ObdView extends View
 
     private Paint paintLargeTextBlueL;
 
+    private int m_Width;
+
+    private int m_Height;
+
+    private int m_Radius;
+
+    private RectF area;
+
     public ObdView(Context context)
     {
         super(context);
@@ -73,9 +78,7 @@ public class ObdView extends View
 
         locale = getResources().getConfiguration().locale;
         sdf = new SimpleDateFormat("HHmm", locale);
-
         area = new RectF();
-        bounds = new Rect();
 
         paintLinesWhite = new Paint();
         paintLinesWarning = new Paint();
@@ -97,6 +100,7 @@ public class ObdView extends View
         paintLinesWhite.setStyle(Paint.Style.STROKE);
         paintLinesWhite.setColor(Color.WHITE);
         paintLinesWhite.setStrokeWidth(0.02f);
+        paintLinesWhite.setStrokeCap(Paint.Cap.ROUND);
 
         paintLinesWarning.setAntiAlias(true);
         paintLinesWarning.setStyle(Paint.Style.STROKE);
@@ -171,31 +175,53 @@ public class ObdView extends View
         paintLargeTextBlue.setColor(Color.rgb(64, 160, 255));
 
         paintLargeTextBlueL.setAntiAlias(true);
-        paintLargeTextBlueL.setTextSize(0.3f);
+        paintLargeTextBlueL.setTextSize(40);
         paintLargeTextBlueL.setTextAlign(Align.LEFT);
         paintLargeTextBlueL.setStyle(Paint.Style.FILL);
         paintLargeTextBlueL.setColor(Color.rgb(64, 160, 255));
     }
 
     @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh)
+    {
+        Log.d(TAG, "Size changed");
+
+        m_Width = w;
+        m_Height = h;
+        m_Radius = (int) (Math.min(w, h / 3) * 0.45);
+
+        // TODO resize fonts and lines
+        paintLargeTextBlue.setTextSize(m_Radius * 0.3f);
+        paintLargeTextBlueL.setTextSize(m_Radius * 0.3f);
+        paintLargeTextWhite.setTextSize(m_Radius * 0.3f);
+        paintLargeTextAmber.setTextSize(m_Radius * 0.3f);
+        paintLargeTextRed.setTextSize(m_Radius * 0.3f);
+        paintSmallTextWhite.setTextSize(m_Radius * 0.15f);
+        paintSmallTextBlue.setTextSize(m_Radius * 0.15f);
+        paintSmallTextGreen.setTextSize(m_Radius * 0.3f);
+
+        paintLinesWhite.setStrokeWidth(m_Radius * 0.02f);
+        paintLinesWarning.setStrokeWidth(m_Radius * 0.02f);
+        paintLinesDanger.setStrokeWidth(m_Radius * 0.02f);
+    }
+
+    @Override
     protected void onDraw(Canvas canvas)
     {
         MainActivity mainact = (MainActivity) getContext();
-        String text;
-        Paint myPaint;
 
-        canvas.getClipBounds(bounds);
-        int w = bounds.width();
-        int h = bounds.height();
-        int rad = (int) (Math.min(w, h / 3) * 0.45);
+        drawTime(canvas);
+        drawFlowDial(canvas, mainact);
+        drawRpmDial(canvas, mainact);
+        drawSpeedDial(canvas, mainact);
+        drawSpeedStrip(canvas, mainact);
+    }
 
+    private void drawTime(Canvas canvas)
+    {
         /*********************************************************************/
         /** time **/
         /*********************************************************************/
-        canvas.setMatrix(null);
-        canvas.translate(0.00f * w, 0.04f * h);
-        canvas.scale(rad, rad);
-
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         Date dat = new Date();
         final String utcTime = sdf.format(dat);
@@ -203,17 +229,21 @@ public class ObdView extends View
         // draw dial label
         long frac = dat.getTime() % 60000;
         String dec = String.format(locale, "%d", frac / 6000);
-        canvas.drawText(utcTime + "." + dec + "z", 0f, 0f, paintLargeTextBlueL);
+        canvas.drawText(utcTime + "." + dec + "z", 0f, m_Radius * 0.3f, paintLargeTextBlueL);
+    }
 
+    private void drawFlowDial(Canvas canvas, MainActivity mainact)
+    {
         /*********************************************************************/
         /** flow dial **/
         /*********************************************************************/
+        String text;
+        Paint myPaint;
+        float xc = m_Width / 2.0f;
+        float yc = m_Height * 0.35f - m_Radius;
+        float rad = m_Radius;
 
         float load = (float) mainact.m_ObdData.m_EngineLoad;
-        canvas.setMatrix(null);
-        canvas.translate(0.35f * w, 0.20f * h);
-        canvas.scale(rad, rad);
-        area.set(-1, -1, 1, 1);
 
         // draw load pie
         myPaint = paintPieNormal;
@@ -221,61 +251,81 @@ public class ObdView extends View
             myPaint = paintPieDanger;
         else if (load >= 90)
             myPaint = paintPieWarning;
+        area.set(xc - rad, yc - rad, xc + rad, yc + rad);
         canvas.drawArc(area, 0f, 225.0f * load / 100.0f, true, myPaint);
 
         // draw load text
-        area.set(-1, -1, 1, 1);
         text = String.format(locale, "%.0f", load);
-        canvas.drawText(text, 0.9f, -0.2f, paintLargeTextWhite);
+        canvas.drawText(text, xc + 0.9f * rad, yc - 0.2f * rad, paintLargeTextWhite);
 
         // draw load marker ticks
-        canvas.save();
-        for (int i = 20; i <= 100; i += 20)
+        for (int i = 0; i <= 100; i += 20)
         {
-            canvas.rotate(225 / 5.0f);
-            canvas.drawLine(0.85f, 0, 1.0f, 0, paintLinesWhite);
+            double ang = (i / 100.0 * 225.0) * Math.PI / 180.0;
+            canvas.drawLine(
+                    //
+                    (float) (xc + 0.85 * rad * Math.cos(ang)),
+                    (float) (yc + 0.85 * rad * Math.sin(ang)),
+                    (float) (xc + 1.00 * rad * Math.cos(ang)),
+                    (float) (yc + 1.00 * rad * Math.sin(ang)), paintLinesWhite);
         }
-        canvas.restore();
 
         // draw dial contour
         canvas.drawArc(area, 0f, 225f * 90.0f / 100.0f, false, paintLinesWhite);
         canvas.drawArc(area, 225f * 90.0f / 100.0f, 225f * 9.0f / 100.0f, false, paintLinesWarning);
         canvas.drawArc(area, 225f * 99.0f / 100.0f, 225f * 1.0f / 100.0f, false, paintLinesDanger);
 
-        canvas.save();
-        canvas.rotate(225f * 90.0f / 100.0f);
-        canvas.drawLine(1.0f, 0, 1.15f, 0, paintLinesWarning);
-        canvas.restore();
-        canvas.save();
-        canvas.rotate(225f * 99.0f / 100.0f);
-        canvas.drawLine(1.0f, 0, 1.15f, 0, paintLinesDanger);
-        canvas.restore();
+        {
+            double ang = (90.0 / 100.0 * 225.0) * Math.PI / 180.0;
+            canvas.drawLine(
+                    //
+                    (float) (xc + 1.00 * rad * Math.cos(ang)),
+                    (float) (yc + 1.00 * rad * Math.sin(ang)),
+                    (float) (xc + 1.15 * rad * Math.cos(ang)),
+                    (float) (yc + 1.15 * rad * Math.sin(ang)), paintLinesWarning);
+        }
+
+        {
+            double ang = (99.0 / 100.0 * 225.0) * Math.PI / 180.0;
+            canvas.drawLine(
+                    //
+                    (float) (xc + 1.00 * rad * Math.cos(ang)),
+                    (float) (yc + 1.00 * rad * Math.sin(ang)),
+                    (float) (xc + 1.15 * rad * Math.cos(ang)),
+                    (float) (yc + 1.15 * rad * Math.sin(ang)), paintLinesDanger);
+        }
 
         // draw text border
-        canvas.drawRect(0.1f, -0.5f, 1.0f, -0.1f, paintLinesWhite);
+        canvas.drawRect( //
+                xc + 0.1f * rad, yc - 0.5f * rad, xc + 1.0f * rad, yc - 0.1f * rad, paintLinesWhite);
 
         // draw load marker numbers
-        for (int i = 20; i <= 100; i += 20)
+        for (int i = 0; i <= 100; i += 20)
         {
-            float xp = (float) (0.65 * Math.cos(i * 225 / 100.0 * Math.PI / 180.0));
-            float yp = 0.05f + (float) (0.65 * Math.sin(i * 225 / 100.0 * Math.PI / 180.0));
+            float xp = (float) (xc + 0.70 * rad * Math.cos(i * 225 / 100.0 * Math.PI / 180.0));
+            float yp = rad * 0.07f
+                    + (float) (yc + 0.70 * rad * Math.sin(i * 225 / 100.0 * Math.PI / 180.0));
+
             text = String.format(locale, "%d", i);
             canvas.drawText(text, xp, yp, paintSmallTextWhite);
         }
 
         // draw dial label
-        canvas.drawText("load", -1.2f, 0.95f, paintSmallTextBlue);
+        canvas.drawText("load", xc - 1.2f * rad, yc + 0.95f * rad, paintSmallTextBlue);
+    }
 
+    private void drawRpmDial(Canvas canvas, MainActivity mainact)
+    {
         /*********************************************************************/
         /** Rpm dial **/
         /*********************************************************************/
+        String text;
+        Paint myPaint;
+        float xc = m_Width / 2.0f;
+        float yc = m_Height * 0.65f - m_Radius;
+        float rad = m_Radius;
 
         float rpm = (float) mainact.m_ObdData.m_EngineRpm;
-        canvas.setMatrix(null);
-        canvas.translate(0.35f * w, 0.50f * h);
-        canvas.scale(rad, rad);
-        area.set(-1, -1, 1, 1);
-
         float maxrpm = (float) (double) (mainact.m_ObdData.m_GearMaxRpm
                 .get(mainact.m_ObdData.m_CurrentGear));
 
@@ -285,11 +335,12 @@ public class ObdView extends View
             myPaint = paintPieDanger;
         else if (rpm > maxrpm)
             myPaint = paintPieWarning;
+        area.set(xc - rad, yc - rad, xc + rad, yc + rad);
         canvas.drawArc(area, 0f, 225.0f * rpm / 5000.0f, true, myPaint);
 
         // draw speed text
         text = String.format(locale, "%.0f", rpm);
-        canvas.drawText(text, 0.9f, -0.2f, paintLargeTextWhite);
+        canvas.drawText(text, xc + 0.9f * rad, yc - 0.2f * rad, paintLargeTextWhite);
 
         // draw optimum gear
         myPaint = paintLargeTextBlue;
@@ -298,57 +349,76 @@ public class ObdView extends View
             myPaint = paintLargeTextAmber;
         }
         text = mainact.m_ObdData.m_GearString.get(mainact.m_ObdData.m_OptimumGear);
-        canvas.drawText(text, 0.9f, -0.6f, myPaint);
+        canvas.drawText(text, xc + 0.9f * rad, yc - 0.6f * rad, myPaint);
 
         // draw rpm marker ticks
-        canvas.save();
         for (int i = 1000; i <= 5000; i += 1000)
         {
-            canvas.rotate(225 / 5.0f);
-            canvas.drawLine(0.85f, 0, 1.0f, 0, paintLinesWhite);
+            double ang = (i / 5000.0 * 225.0) * Math.PI / 180.0;
+            canvas.drawLine(
+                    //
+                    (float) (xc + 0.85 * rad * Math.cos(ang)),
+                    (float) (yc + 0.85 * rad * Math.sin(ang)),
+                    (float) (xc + 1.00 * rad * Math.cos(ang)),
+                    (float) (yc + 1.00 * rad * Math.sin(ang)), paintLinesWhite);
         }
-        canvas.restore();
 
         // draw dial contour
         canvas.drawArc(area, 0f, 225f * maxrpm / 5000f, false, paintLinesWhite);
-        canvas.drawArc(area, 225f * maxrpm / 5000f, 225f * (5000 - maxrpm) / 5000f, false,
+        canvas.drawArc(area, 225f * maxrpm / 5000f, 225f * (3500 - maxrpm) / 5000f, false,
                 paintLinesWarning);
         canvas.drawArc(area, 225f * 3500f / 5000f, 225f * 1500f / 5000f, false, paintLinesDanger);
 
-        canvas.save();
-        canvas.rotate(225f * 3500f / 5000f);
-        canvas.drawLine(1.0f, 0, 1.15f, 0, paintLinesDanger);
-        canvas.restore();
+        {
+            double ang = (maxrpm / 5000.0 * 225.0) * Math.PI / 180.0;
+            canvas.drawLine(
+                    //
+                    (float) (xc + 1.00 * rad * Math.cos(ang)),
+                    (float) (yc + 1.00 * rad * Math.sin(ang)),
+                    (float) (xc + 1.15 * rad * Math.cos(ang)),
+                    (float) (yc + 1.15 * rad * Math.sin(ang)), paintLinesWarning);
+        }
 
-        canvas.save();
-        canvas.rotate(225f * maxrpm / 5000f);
-        canvas.drawLine(1.0f, 0, 1.15f, 0, paintLinesWarning);
-        canvas.restore();
+        {
+            double ang = (3500.0 / 5000.0 * 225.0) * Math.PI / 180.0;
+            canvas.drawLine(
+                    //
+                    (float) (xc + 1.00 * rad * Math.cos(ang)),
+                    (float) (yc + 1.00 * rad * Math.sin(ang)),
+                    (float) (xc + 1.15 * rad * Math.cos(ang)),
+                    (float) (yc + 1.15 * rad * Math.sin(ang)), paintLinesDanger);
+        }
 
         // draw text border
-        canvas.drawRect(0.1f, -0.5f, 1.0f, -0.1f, paintLinesWhite);
+        canvas.drawRect(xc + 0.1f * rad, yc - 0.5f * rad, xc + 1.0f * rad, yc - 0.1f * rad,
+                paintLinesWhite);
 
         // draw rpm marker numbers
         for (int i = 1; i <= 5; i += 1)
         {
-            float xp = (float) (0.7 * Math.cos(i * 225 / 5.0 * Math.PI / 180.0));
-            float yp = 0.05f + (float) (0.7 * Math.sin(i * 225 / 5.0 * Math.PI / 180.0));
+            float xp = (float) (xc + 0.7 * rad * Math.cos(i * 225 / 5.0 * Math.PI / 180.0));
+            float yp = rad * 0.07f
+                    + (float) (yc + 0.7 * rad * Math.sin(i * 225 / 5.0 * Math.PI / 180.0));
             text = String.format(locale, "%d", i);
             canvas.drawText(text, xp, yp, paintSmallTextWhite);
         }
 
         // draw dial label
-        canvas.drawText("rpm", -1.2f, 0.95f, paintSmallTextBlue);
+        canvas.drawText("rpm", xc - 1.2f * rad, yc + 0.95f * rad, paintSmallTextBlue);
+    }
 
+    private float drawSpeedDial(Canvas canvas, MainActivity mainact)
+    {
         /*********************************************************************/
         /** Speed dial **/
         /*********************************************************************/
+        String text;
+        Paint myPaint;
+        float xc = m_Width / 2.0f;
+        float yc = m_Height * 0.95f - m_Radius;
+        float rad = m_Radius;
 
         float speed = (float) mainact.m_ObdData.m_VehicleSpeed;
-        canvas.setMatrix(null);
-        canvas.translate(0.35f * w, 0.8f * h);
-        canvas.scale(rad, rad);
-        area.set(-1, -1, 1, 1);
 
         // draw speed pie
         myPaint = paintPieNormal;
@@ -356,6 +426,7 @@ public class ObdView extends View
             myPaint = paintPieDanger;
         else if (speed > mainact.m_ObdData.m_MaxSpeed + 4)
             myPaint = paintPieWarning;
+        area.set(xc - rad, yc - rad, xc + rad, yc + rad);
         canvas.drawArc(area, 0f, 225.0f * speed / 140.0f, true, myPaint);
 
         // draw speed text
@@ -370,23 +441,27 @@ public class ObdView extends View
         }
 
         text = String.format(locale, "%.1f", speed);
-        canvas.drawText(text, 0.9f, -0.2f, myPaint);
+        canvas.drawText(text, xc + 0.9f * rad, yc - 0.2f * rad, myPaint);
 
         // draw max speed text
         text = String.format(locale, "%.1f", mainact.m_ObdData.m_MaxSpeed);
-        canvas.drawText(text, 0.9f, -0.6f, paintSmallTextGreen);
+        canvas.drawText(text, xc + 0.9f * rad, yc - 0.6f * rad, paintSmallTextGreen);
 
         // draw text border
-        canvas.drawRect(0.1f, -0.5f, 1.0f, -0.1f, paintLinesWhite);
+        canvas.drawRect(xc + rad * 0.1f, yc - 0.5f * rad, xc + 1.0f * rad, yc - 0.1f * rad,
+                paintLinesWhite);
 
         // draw kph marker ticks
-        canvas.save();
-        for (int i = 10; i <= 140; i += 20)
+        for (int i = 0; i <= 140; i += 20)
         {
-            canvas.rotate(225 / 7.0f);
-            canvas.drawLine(0.85f, 0, 1.0f, 0, paintLinesWhite);
+            double ang = (i / 140.0 * 225.0) * Math.PI / 180.0;
+            canvas.drawLine(
+                    //
+                    (float) (xc + 0.85 * rad * Math.cos(ang)),
+                    (float) (yc + 0.85 * rad * Math.sin(ang)),
+                    (float) (xc + 1.00 * rad * Math.cos(ang)),
+                    (float) (yc + 1.00 * rad * Math.sin(ang)), paintLinesWhite);
         }
-        canvas.restore();
 
         // draw dial contour
         canvas.drawArc(area, 0f, 225f * (float) (mainact.m_ObdData.m_MaxSpeed + 4) / 140.0f, false,
@@ -396,39 +471,60 @@ public class ObdView extends View
                 225f * 2.0f / 140.0f, false, paintLinesWarning);
 
         canvas.drawArc(area, 225f * (float) (mainact.m_ObdData.m_MaxSpeed + 6) / 140.0f,
-                225f * (135.0f - (float) mainact.m_ObdData.m_MaxSpeed - 6) / 140.0f, false,
+                225f * (140.0f - (float) mainact.m_ObdData.m_MaxSpeed - 6) / 140.0f, false,
                 paintLinesDanger);
 
         // draw kph limit
-        canvas.save();
-        canvas.rotate(225 / 7.0f * (float) (mainact.m_ObdData.m_MaxSpeed + 4) / 20.0f);
-        canvas.drawLine(1.0f, 0, 1.15f, 0, paintLinesWarning);
-        canvas.restore();
-        canvas.save();
-        canvas.rotate(225 / 7.0f * (float) (mainact.m_ObdData.m_MaxSpeed + 6) / 20.0f);
-        canvas.drawLine(1.0f, 0, 1.2f, 0, paintLinesDanger);
-        canvas.restore();
+        {
+            double ang = ((float) (mainact.m_ObdData.m_MaxSpeed + 4) / 140.0 * 225.0) * Math.PI
+                    / 180.0;
+            canvas.drawLine(
+                    //
+                    (float) (xc + 1.00 * rad * Math.cos(ang)),
+                    (float) (yc + 1.00 * rad * Math.sin(ang)),
+                    (float) (xc + 1.15 * rad * Math.cos(ang)),
+                    (float) (yc + 1.15 * rad * Math.sin(ang)), paintLinesWarning);
+        }
+
+        {
+            double ang = ((float) (mainact.m_ObdData.m_MaxSpeed + 6) / 140.0 * 225.0) * Math.PI
+                    / 180.0;
+            canvas.drawLine(
+                    //
+                    (float) (xc + 1.00 * rad * Math.cos(ang)),
+                    (float) (yc + 1.00 * rad * Math.sin(ang)),
+                    (float) (xc + 1.15 * rad * Math.cos(ang)),
+                    (float) (yc + 1.15 * rad * Math.sin(ang)), paintLinesDanger);
+        }
 
         // draw kph marker numbers
         for (int i = 2; i <= 14; i += 2)
         {
-            float xp = (float) (0.65 * Math.cos(i * 225 / 14.0 * Math.PI / 180.0));
-            float yp = 0.05f + (float) (0.65 * Math.sin(i * 225 / 14.0 * Math.PI / 180.0));
+            float xp = (float) (xc + 0.65 * rad * Math.cos(i * 225 / 14.0 * Math.PI / 180.0));
+            float yp = 0.07f * rad
+                    + (float) (yc + 0.65 * rad * Math.sin(i * 225 / 14.0 * Math.PI / 180.0));
             text = String.format(locale, "%d", i);
             canvas.drawText(text, xp, yp, paintSmallTextWhite);
         }
 
         // draw dial label
-        canvas.drawText("kph", -1.2f, 0.95f, paintSmallTextBlue);
+        canvas.drawText("kph", xc - 1.2f * rad, yc + 0.95f * rad, paintSmallTextBlue);
+        return speed;
+    }
 
+    private void drawSpeedStrip(Canvas canvas, MainActivity mainact)
+    {
         /*********************************************************************/
         /** Speed strip **/
         /*********************************************************************/
+        float xc = m_Width * 0.9f;
+        float yc = m_Height * 0.5f;
+        float xs = m_Width * 0.03f;
+        float ys = m_Height * 0.45f;
 
-        canvas.setMatrix(null);
-        canvas.translate(0.85f * w, 0.5f * h);
-        canvas.scale(rad, rad);
+        float speed = (float) mainact.m_ObdData.m_VehicleSpeed;
 
+        Paint myPaint;
         {
             myPaint = paintPieNormal;
             if (speed > mainact.m_ObdData.m_MaxSpeed + 6)
@@ -436,28 +532,30 @@ public class ObdView extends View
             else if (speed > mainact.m_ObdData.m_MaxSpeed + 4)
                 myPaint = paintPieWarning;
 
-            float y = (speed - (float) mainact.m_ObdData.m_MaxSpeed) * -6.0f / 20.0f;
+            float y = (speed - (float) mainact.m_ObdData.m_MaxSpeed);
 
-            y = Math.min(3, Math.max(-3, y));
-            area.set(-0.2f, y, 0.2f, 3);
+            y = Math.min(10, Math.max(-10, y));
+            area.set(xc - xs, yc - ys * y / 10.0f, xc + xs, yc + ys);
             canvas.drawRect(area, myPaint);
         }
 
-        area.set(-0.2f, -3f, 0.2f, 3f);
+        area.set(xc - xs, yc - ys, xc + xs, yc + ys);
         canvas.drawRect(area, paintLinesWhite);
 
         // draw kph markers
         {
             float y;
-            y = 0 * -6.0f / 20.0f;
-            canvas.drawLine(-0.3f, y, -0.2f, y, paintLinesWhite);
-            canvas.drawLine(0.3f, y, 0.2f, y, paintLinesWhite);
-            y = 4 * -6.0f / 20.0f;
-            canvas.drawLine(-0.35f, y, -0.2f, y, paintLinesWarning);
-            canvas.drawLine(0.35f, y, 0.2f, y, paintLinesWarning);
-            y = 6 * -6.0f / 20.0f;
-            canvas.drawLine(-0.4f, y, -0.2f, y, paintLinesDanger);
-            canvas.drawLine(0.4f, y, 0.2f, y, paintLinesDanger);
+            y = yc;
+            canvas.drawLine(xc - 1.5f * xs, y, xc - 1.0f * xs, y, paintLinesWhite);
+            canvas.drawLine(xc + 1.5f * xs, y, xc + 1.0f * xs, y, paintLinesWhite);
+
+            y = yc - ys * 4.0f / 10.0f;
+            canvas.drawLine(xc - 1.5f * xs, y, xc - 1.0f * xs, y, paintLinesWarning);
+            canvas.drawLine(xc + 1.5f * xs, y, xc + 1.0f * xs, y, paintLinesWarning);
+
+            y = yc - ys * 6.0f / 10.0f;
+            canvas.drawLine(xc - 1.5f * xs, y, xc - 1.0f * xs, y, paintLinesDanger);
+            canvas.drawLine(xc + 1.5f * xs, y, xc + 1.0f * xs, y, paintLinesDanger);
         }
     }
 }
