@@ -45,11 +45,8 @@ public class ObdView extends View
     private Paint paintLargeTextBlueL;
 
     private int m_Width;
-
     private int m_Height;
-
     private int m_Radius;
-
     private RectF area;
 
     public ObdView(Context context)
@@ -209,8 +206,6 @@ public class ObdView extends View
         MainActivity mainact = (MainActivity) getContext();
 
         drawTime(canvas);
-        drawFlowDial(canvas, mainact);
-        drawRpmDial(canvas, mainact);
         drawSpeedDial(canvas, mainact);
         drawSpeedStrip(canvas, mainact);
     }
@@ -228,181 +223,6 @@ public class ObdView extends View
         long frac = dat.getTime() % 60000;
         String dec = String.format(locale, "%d", frac / 6000);
         canvas.drawText(utcTime + "." + dec + "z", 0f, m_Radius * 0.3f, paintLargeTextBlueL);
-    }
-
-    private void drawFlowDial(Canvas canvas, MainActivity mainact)
-    {
-        /*********************************************************************/
-        /** flow dial **/
-        /*********************************************************************/
-        String text;
-        Paint myPaint;
-        float xc = m_Width / 2.0f;
-        float yc = m_Height * 0.35f - m_Radius;
-        float rad = m_Radius;
-
-        float load = (float) mainact.m_ObdData.m_EngineLoad;
-
-        // draw load pie
-        myPaint = paintPieNormal;
-        if (load >= 98)
-            myPaint = paintPieDanger;
-        else if (load >= 90)
-            myPaint = paintPieWarning;
-        area.set(xc - rad, yc - rad, xc + rad, yc + rad);
-        canvas.drawArc(area, 0f, 225.0f * load / 100.0f, true, myPaint);
-
-        // draw load text
-        text = String.format(locale, "%.0f", load);
-        canvas.drawText(text, xc + 0.9f * rad, yc - 0.2f * rad, paintLargeTextWhite);
-
-        // draw load marker ticks
-        for (int i = 0; i <= 100; i += 20)
-        {
-            double ang = (i / 100.0 * 225.0) * Math.PI / 180.0;
-            canvas.drawLine(
-                    //
-                    (float) (xc + 0.85 * rad * Math.cos(ang)),
-                    (float) (yc + 0.85 * rad * Math.sin(ang)),
-                    (float) (xc + 1.00 * rad * Math.cos(ang)),
-                    (float) (yc + 1.00 * rad * Math.sin(ang)), paintLinesWhite);
-        }
-
-        // draw dial contour
-        canvas.drawArc(area, 0f, 225f * 90.0f / 100.0f, false, paintLinesWhite);
-        canvas.drawArc(area, 225f * 90.0f / 100.0f, 225f * 9.0f / 100.0f, false, paintLinesWarning);
-        canvas.drawArc(area, 225f * 99.0f / 100.0f, 225f * 1.0f / 100.0f, false, paintLinesDanger);
-
-        {
-            double ang = (90.0 / 100.0 * 225.0) * Math.PI / 180.0;
-            canvas.drawLine(
-                    //
-                    (float) (xc + 1.00 * rad * Math.cos(ang)),
-                    (float) (yc + 1.00 * rad * Math.sin(ang)),
-                    (float) (xc + 1.15 * rad * Math.cos(ang)),
-                    (float) (yc + 1.15 * rad * Math.sin(ang)), paintLinesWarning);
-        }
-
-        {
-            double ang = (99.0 / 100.0 * 225.0) * Math.PI / 180.0;
-            canvas.drawLine(
-                    //
-                    (float) (xc + 1.00 * rad * Math.cos(ang)),
-                    (float) (yc + 1.00 * rad * Math.sin(ang)),
-                    (float) (xc + 1.15 * rad * Math.cos(ang)),
-                    (float) (yc + 1.15 * rad * Math.sin(ang)), paintLinesDanger);
-        }
-
-        // draw text border
-        canvas.drawRect( //
-                xc + 0.1f * rad, yc - 0.5f * rad, xc + 1.0f * rad, yc - 0.1f * rad, paintLinesWhite);
-
-        // draw load marker numbers
-        for (int i = 0; i <= 100; i += 20)
-        {
-            float xp = (float) (xc + 0.70 * rad * Math.cos(i * 225 / 100.0 * Math.PI / 180.0));
-            float yp = rad * 0.07f
-                    + (float) (yc + 0.70 * rad * Math.sin(i * 225 / 100.0 * Math.PI / 180.0));
-
-            text = String.format(locale, "%d", i);
-            canvas.drawText(text, xp, yp, paintSmallTextWhite);
-        }
-
-        // draw dial label
-        canvas.drawText("load", xc - 1.2f * rad, yc + 0.95f * rad, paintSmallTextBlue);
-    }
-
-    private void drawRpmDial(Canvas canvas, MainActivity mainact)
-    {
-        /*********************************************************************/
-        /** Rpm dial **/
-        /*********************************************************************/
-        String text;
-        Paint myPaint;
-        float xc = m_Width / 2.0f;
-        float yc = m_Height * 0.65f - m_Radius;
-        float rad = m_Radius;
-
-        float rpm = (float) mainact.m_ObdData.m_EngineRpm;
-        float maxrpm = (float) (double) (mainact.m_ObdData.m_GearMaxRpm
-                .get(mainact.m_ObdData.m_CurrentGear));
-
-        // draw rpm pie
-        myPaint = paintPieNormal;
-        if (rpm > 3500)
-            myPaint = paintPieDanger;
-        else if (rpm > maxrpm)
-            myPaint = paintPieWarning;
-        area.set(xc - rad, yc - rad, xc + rad, yc + rad);
-        canvas.drawArc(area, 0f, 225.0f * rpm / 5000.0f, true, myPaint);
-
-        // draw speed text
-        text = String.format(locale, "%.0f", rpm);
-        canvas.drawText(text, xc + 0.9f * rad, yc - 0.2f * rad, paintLargeTextWhite);
-
-        // draw optimum gear
-        myPaint = paintLargeTextBlue;
-        if (mainact.m_ObdData.m_OptimumGear != mainact.m_ObdData.m_CurrentGear)
-        {
-            myPaint = paintLargeTextAmber;
-        }
-        text = mainact.m_ObdData.m_GearString.get(mainact.m_ObdData.m_OptimumGear);
-        canvas.drawText(text, xc + 0.9f * rad, yc - 0.6f * rad, myPaint);
-
-        // draw rpm marker ticks
-        for (int i = 1000; i <= 5000; i += 1000)
-        {
-            double ang = (i / 5000.0 * 225.0) * Math.PI / 180.0;
-            canvas.drawLine(
-                    //
-                    (float) (xc + 0.85 * rad * Math.cos(ang)),
-                    (float) (yc + 0.85 * rad * Math.sin(ang)),
-                    (float) (xc + 1.00 * rad * Math.cos(ang)),
-                    (float) (yc + 1.00 * rad * Math.sin(ang)), paintLinesWhite);
-        }
-
-        // draw dial contour
-        canvas.drawArc(area, 0f, 225f * maxrpm / 5000f, false, paintLinesWhite);
-        canvas.drawArc(area, 225f * maxrpm / 5000f, 225f * (3500 - maxrpm) / 5000f, false,
-                paintLinesWarning);
-        canvas.drawArc(area, 225f * 3500f / 5000f, 225f * 1500f / 5000f, false, paintLinesDanger);
-
-        {
-            double ang = (maxrpm / 5000.0 * 225.0) * Math.PI / 180.0;
-            canvas.drawLine(
-                    //
-                    (float) (xc + 1.00 * rad * Math.cos(ang)),
-                    (float) (yc + 1.00 * rad * Math.sin(ang)),
-                    (float) (xc + 1.15 * rad * Math.cos(ang)),
-                    (float) (yc + 1.15 * rad * Math.sin(ang)), paintLinesWarning);
-        }
-
-        {
-            double ang = (3500.0 / 5000.0 * 225.0) * Math.PI / 180.0;
-            canvas.drawLine(
-                    //
-                    (float) (xc + 1.00 * rad * Math.cos(ang)),
-                    (float) (yc + 1.00 * rad * Math.sin(ang)),
-                    (float) (xc + 1.15 * rad * Math.cos(ang)),
-                    (float) (yc + 1.15 * rad * Math.sin(ang)), paintLinesDanger);
-        }
-
-        // draw text border
-        canvas.drawRect(xc + 0.1f * rad, yc - 0.5f * rad, xc + 1.0f * rad, yc - 0.1f * rad,
-                paintLinesWhite);
-
-        // draw rpm marker numbers
-        for (int i = 1; i <= 5; i += 1)
-        {
-            float xp = (float) (xc + 0.7 * rad * Math.cos(i * 225 / 5.0 * Math.PI / 180.0));
-            float yp = rad * 0.07f
-                    + (float) (yc + 0.7 * rad * Math.sin(i * 225 / 5.0 * Math.PI / 180.0));
-            text = String.format(locale, "%d", i);
-            canvas.drawText(text, xp, yp, paintSmallTextWhite);
-        }
-
-        // draw dial label
-        canvas.drawText("rpm", xc - 1.2f * rad, yc + 0.95f * rad, paintSmallTextBlue);
     }
 
     private float drawSpeedDial(Canvas canvas, MainActivity mainact)

@@ -24,8 +24,8 @@ public class VehicleData
     public Gear m_CurrentGear;
     public Gear m_OptimumGear;
     EnumMap<Gear, Double> m_GearRatios = new EnumMap<Gear, Double>(Gear.class);
-    EnumMap<Gear, String> m_GearString = new EnumMap<Gear, String>(Gear.class);
-    EnumMap<Gear, Double> m_GearMaxRpm = new EnumMap<Gear, Double>(Gear.class);
+    public EnumMap<Gear, String> m_GearString = new EnumMap<Gear, String>(Gear.class);
+    public EnumMap<Gear, Double> m_GearMaxRpm = new EnumMap<Gear, Double>(Gear.class);
 
     // Controller
     private double m_SpeedRate;
