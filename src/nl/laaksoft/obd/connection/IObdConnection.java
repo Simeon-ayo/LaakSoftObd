@@ -1,4 +1,4 @@
-package nl.laaksoft.obd;
+package nl.laaksoft.obd.connection;
 
 public interface IObdConnection
 {

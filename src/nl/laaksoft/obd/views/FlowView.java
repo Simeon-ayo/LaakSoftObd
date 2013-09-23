@@ -1,6 +1,6 @@
 package nl.laaksoft.obd.views;
 
-import nl.laaksoft.obd.VehicleData;
+import nl.laaksoft.obd.connection.VehicleData;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -8,8 +8,8 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 
 public class FlowView extends DialView {
-	private VehicleData mObdData;
-	private RectF mArea;
+	private VehicleData m_ObdData;
+	private RectF m_Area;
 
 	public FlowView(Context context) {
 		super(context);
@@ -24,17 +24,17 @@ public class FlowView extends DialView {
 	}
 
 	public void setmOdbData(VehicleData mOdbData) {
-		this.mObdData = mOdbData;
+		this.m_ObdData = mOdbData;
 		invalidate();
 	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
-		if (mObdData == null) {
-			mObdData = new VehicleData();
+		if (m_ObdData == null) {
+			m_ObdData = new VehicleData();
 		}
-		if (mArea == null) {
-			mArea = new RectF();
+		if (m_Area == null) {
+			m_Area = new RectF();
 		}
 
 		drawFlowDial(canvas);
@@ -50,9 +50,9 @@ public class FlowView extends DialView {
 		Paint myPaint;
 		float xc = getWidth() / 2.0f;
 		float yc = getHeight() / 2.0f;
-		float rad = mRadius;
+		float rad = m_Radius;
 
-		float load = (float) mObdData.m_EngineLoad;
+		float load = (float) m_ObdData.m_EngineLoad;
 
 		// draw load pie
 		myPaint = paintPieNormal;
@@ -60,11 +60,11 @@ public class FlowView extends DialView {
 			myPaint = paintPieDanger;
 		else if (load >= 90)
 			myPaint = paintPieWarning;
-		mArea.set(xc - rad, yc - rad, xc + rad, yc + rad);
-		canvas.drawArc(mArea, 0f, 225.0f * load / 100.0f, true, myPaint);
+		m_Area.set(xc - rad, yc - rad, xc + rad, yc + rad);
+		canvas.drawArc(m_Area, 0f, 225.0f * load / 100.0f, true, myPaint);
 
 		// draw load text
-		text = String.format(mLocale, "%.0f", load);
+		text = String.format(m_Locale, "%.0f", load);
 		canvas.drawText(text, xc + 0.9f * rad, yc - 0.2f * rad,
 				paintLargeTextWhite);
 
@@ -80,10 +80,10 @@ public class FlowView extends DialView {
 		}
 
 		// draw dial contour
-		canvas.drawArc(mArea, 0f, 225f * 90.0f / 100.0f, false, paintLinesWhite);
-		canvas.drawArc(mArea, 225f * 90.0f / 100.0f, 225f * 9.0f / 100.0f,
+		canvas.drawArc(m_Area, 0f, 225f * 90.0f / 100.0f, false, paintLinesWhite);
+		canvas.drawArc(m_Area, 225f * 90.0f / 100.0f, 225f * 9.0f / 100.0f,
 				false, paintLinesWarning);
-		canvas.drawArc(mArea, 225f * 99.0f / 100.0f, 225f * 1.0f / 100.0f,
+		canvas.drawArc(m_Area, 225f * 99.0f / 100.0f, 225f * 1.0f / 100.0f,
 				false, paintLinesDanger);
 
 		{
@@ -121,7 +121,7 @@ public class FlowView extends DialView {
 					+ (float) (yc + 0.70 * rad
 							* Math.sin(i * 225 / 100.0 * Math.PI / 180.0));
 
-			text = String.format(mLocale, "%d", i);
+			text = String.format(m_Locale, "%d", i);
 			canvas.drawText(text, xp, yp, paintSmallTextWhite);
 		}
 

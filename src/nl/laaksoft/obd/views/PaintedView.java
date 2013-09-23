@@ -10,7 +10,7 @@ import android.util.AttributeSet;
 import android.view.View;
 
 public class PaintedView extends View {
-	protected Locale mLocale;
+	protected Locale m_Locale;
 
 	protected Paint paintLinesWhite;
 	protected Paint paintLinesWarning;
@@ -28,6 +28,8 @@ public class PaintedView extends View {
 	protected Paint paintLargeTextRed;
 	protected Paint paintLargeTextBlue;
 	protected Paint paintLargeTextBlueL;
+
+	protected Paint paintMediumTextWhite;
 
 	protected Paint paintSmallTextWhite;
 	protected Paint paintSmallTextBlue;
@@ -49,8 +51,8 @@ public class PaintedView extends View {
 	}
 
 	private void Init(Context context) {
-		mLocale = getResources().getConfiguration().locale;
-				
+		m_Locale = getResources().getConfiguration().locale;
+
 		paintLinesWhite = new Paint();
 		paintLinesWhite.setAntiAlias(true);
 		paintLinesWhite.setStyle(Paint.Style.STROKE);
@@ -98,7 +100,7 @@ public class PaintedView extends View {
 		paintBlackBrush.setAntiAlias(true);
 		paintBlackBrush.setStyle(Paint.Style.FILL);
 		paintBlackBrush.setColor(Color.rgb(0, 0, 0));
-		
+
 		paintGrayBrush = new Paint();
 		paintGrayBrush.setAntiAlias(true);
 		paintGrayBrush.setStyle(Paint.Style.FILL);
@@ -127,6 +129,14 @@ public class PaintedView extends View {
 		paintLargeTextRed.setStyle(Paint.Style.FILL);
 		paintLargeTextRed.setColor(Color.rgb(192, 0, 0));
 		paintLargeTextRed.setTextSize(10);
+
+		paintMediumTextWhite = new Paint();
+		paintMediumTextWhite.setAntiAlias(true);
+		paintMediumTextWhite.setTextSize(0.3f);
+		paintMediumTextWhite.setTextAlign(Align.RIGHT);
+		paintMediumTextWhite.setStyle(Paint.Style.FILL);
+		paintMediumTextWhite.setColor(Color.rgb(160, 160, 192));
+		paintMediumTextWhite.setTextSize(10);
 
 		paintSmallTextWhite = new Paint();
 		paintSmallTextWhite.setAntiAlias(true);

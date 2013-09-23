@@ -6,7 +6,7 @@ import android.util.Log;
 
 public class DialView extends PaintedView {
 	private static final String TAG = "OBD";
-	protected int mRadius;
+	protected int m_Radius;
 
 	public DialView(Context context) {
 		super(context);
@@ -24,7 +24,7 @@ public class DialView extends PaintedView {
 		Log.d(TAG, "Size changed");
 
 		int size = Math.min((int) (w / 1.3), h);
-		mRadius = (int) (size * 0.45);
+		m_Radius = (int) (size * 0.45);
 
 		int lineWidth = 2;
 		int textSizeNormal = 15;

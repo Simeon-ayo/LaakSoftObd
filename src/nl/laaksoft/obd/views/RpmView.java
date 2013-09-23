@@ -1,6 +1,6 @@
 package nl.laaksoft.obd.views;
 
-import nl.laaksoft.obd.VehicleData;
+import nl.laaksoft.obd.connection.VehicleData;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -8,8 +8,8 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 
 public class RpmView extends DialView {
-	private VehicleData mObdData;
-	private RectF mArea;
+	private VehicleData m_ObdData;
+	private RectF m_Area;
 
 	public RpmView(Context context) {
 		super(context);
@@ -24,18 +24,18 @@ public class RpmView extends DialView {
 	}
 
 	public void setmOdbData(VehicleData mOdbData) {
-		this.mObdData = mOdbData;
+		this.m_ObdData = mOdbData;
 		invalidate();
 	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
 
-		if (mObdData == null) {
-			mObdData = new VehicleData();
+		if (m_ObdData == null) {
+			m_ObdData = new VehicleData();
 		}
-		if (mArea == null) {
-			mArea = new RectF();
+		if (m_Area == null) {
+			m_Area = new RectF();
 		}
 
 		drawRpmDial(canvas);
@@ -51,11 +51,11 @@ public class RpmView extends DialView {
 		Paint myPaint;
 		float xc = getWidth() / 2.0f;
 		float yc = getHeight() / 2.0f;
-		float rad = mRadius;
+		float rad = m_Radius;
 
-		float rpm = (float) mObdData.m_EngineRpm;
-		float maxrpm = (float) (double) (mObdData.m_GearMaxRpm
-				.get(mObdData.m_CurrentGear));
+		float rpm = (float) m_ObdData.m_EngineRpm;
+		float maxrpm = (float) (double) (m_ObdData.m_GearMaxRpm
+				.get(m_ObdData.m_CurrentGear));
 
 		// draw rpm pie
 		myPaint = paintPieNormal;
@@ -63,20 +63,20 @@ public class RpmView extends DialView {
 			myPaint = paintPieDanger;
 		else if (rpm > maxrpm)
 			myPaint = paintPieWarning;
-		mArea.set(xc - rad, yc - rad, xc + rad, yc + rad);
-		canvas.drawArc(mArea, 0f, 225.0f * rpm / 5000.0f, true, myPaint);
+		m_Area.set(xc - rad, yc - rad, xc + rad, yc + rad);
+		canvas.drawArc(m_Area, 0f, 225.0f * rpm / 5000.0f, true, myPaint);
 
 		// draw speed text
-		text = String.format(mLocale, "%.0f", rpm);
+		text = String.format(m_Locale, "%.0f", rpm);
 		canvas.drawText(text, xc + 0.9f * rad, yc - 0.2f * rad,
 				paintLargeTextWhite);
 
 		// draw optimum gear
 		myPaint = paintLargeTextBlue;
-		if (mObdData.m_OptimumGear != mObdData.m_CurrentGear) {
+		if (m_ObdData.m_OptimumGear != m_ObdData.m_CurrentGear) {
 			myPaint = paintLargeTextAmber;
 		}
-		text = mObdData.m_GearString.get(mObdData.m_OptimumGear);
+		text = m_ObdData.m_GearString.get(m_ObdData.m_OptimumGear);
 		canvas.drawText(text, xc + 0.9f * rad, yc - 0.6f * rad, myPaint);
 
 		// draw rpm marker ticks
@@ -91,10 +91,10 @@ public class RpmView extends DialView {
 		}
 
 		// draw dial contour
-		canvas.drawArc(mArea, 0f, 225f * maxrpm / 5000f, false, paintLinesWhite);
-		canvas.drawArc(mArea, 225f * maxrpm / 5000f,
+		canvas.drawArc(m_Area, 0f, 225f * maxrpm / 5000f, false, paintLinesWhite);
+		canvas.drawArc(m_Area, 225f * maxrpm / 5000f,
 				225f * (3500 - maxrpm) / 5000f, false, paintLinesWarning);
-		canvas.drawArc(mArea, 225f * 3500f / 5000f, 225f * 1500f / 5000f,
+		canvas.drawArc(m_Area, 225f * 3500f / 5000f, 225f * 1500f / 5000f,
 				false, paintLinesDanger);
 
 		{
@@ -130,7 +130,7 @@ public class RpmView extends DialView {
 					* 0.07f
 					+ (float) (yc + 0.7 * rad
 							* Math.sin(i * 225 / 5.0 * Math.PI / 180.0));
-			text = String.format(mLocale, "%d", i);
+			text = String.format(m_Locale, "%d", i);
 			canvas.drawText(text, xp, yp, paintSmallTextWhite);
 		}
 

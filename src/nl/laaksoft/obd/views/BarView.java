@@ -22,12 +22,13 @@ public class BarView extends PaintedView {
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 		Log.d(TAG, "Size changed");
 
-		int size = Math.min((int) (w / 1.3), h);
+		int size = Math.max(w, h);
 
 		int lineWidth = 2;
 		int textSizeNormal = 15;
+		int textSizeMedium = 22;
 		int textSizeLarge = 30;
-		float scale = size / 200f;
+		float scale = size / 600f;
 
 		paintLinesWhite.setStrokeWidth(lineWidth * scale);
 		paintLinesWarning.setStrokeWidth(lineWidth * scale);
@@ -38,6 +39,7 @@ public class BarView extends PaintedView {
 		paintSmallTextBlue.setTextSize(textSizeNormal * scale);
 		paintSmallTextGreen.setTextSize(textSizeNormal * scale);
 
+		paintMediumTextWhite.setTextSize(textSizeMedium * scale);
 		paintLargeTextWhite.setTextSize(textSizeLarge * scale);
 		paintLargeTextAmber.setTextSize(textSizeLarge * scale);
 		paintLargeTextRed.setTextSize(textSizeLarge * scale);

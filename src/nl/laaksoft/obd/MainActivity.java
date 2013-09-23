@@ -1,23 +1,19 @@
 package nl.laaksoft.obd;
 
-import nl.laaksoft.obd.reader.R;
+import nl.laaksoft.obd.connection.IObdConnection;
+import nl.laaksoft.obd.connection.ObdConnection;
+import nl.laaksoft.obd.connection.ObdConnectionSim;
+import nl.laaksoft.obd.connection.VehicleData;
 import nl.laaksoft.obd.views.FlowView;
 import nl.laaksoft.obd.views.RpmView;
-import preferences.MainPrefsActivity;
+import nl.laaksoft.obd.views.SpeedView;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -26,15 +22,19 @@ import android.widget.Toast;
 /**
  * The main activity.
  */
-public class MainActivity extends Activity implements
-		OnSharedPreferenceChangeListener {
+public class MainActivity extends Activity {
+
 	private static final String TAG = "OBD";
-	private IObdConnection m_Obd;
-	public VehicleData m_ObdData;
-	private FlowView m_FlowView;
+
 	private Handler m_Handler;
 	private WakeLock m_WakeLock;
+
+	private IObdConnection m_Obd;
+	public VehicleData m_ObdData;
+
+	private FlowView m_FlowView;
 	private RpmView m_RpmView;
+	private SpeedView m_SpeedView;
 
 	/**************************************************************************/
 	@Override
@@ -55,18 +55,12 @@ public class MainActivity extends Activity implements
 
 		m_FlowView = (FlowView) findViewById(R.id.vwFlowView);
 		m_RpmView = (RpmView) findViewById(R.id.vwRpmView);
+		m_SpeedView = (SpeedView) findViewById(R.id.vwSpeedView);
 
 		m_Obd = new ObdConnection();
 		m_ObdData = new VehicleData();
 
 		m_Handler = new Handler();
-
-		SharedPreferences app_preferences = PreferenceManager
-				.getDefaultSharedPreferences(this);
-		m_ObdData.p_gain = app_preferences.getInt("P", 5);
-		m_ObdData.i_gain = app_preferences.getInt("I", 0);
-
-		app_preferences.registerOnSharedPreferenceChangeListener(this);
 	}
 
 	/**************************************************************************/
@@ -107,8 +101,10 @@ public class MainActivity extends Activity implements
 		public void run() {
 			m_Obd.updateData(m_ObdData);
 			m_ObdData.calculate();
-			m_FlowView.invalidate();
+
+			m_FlowView.setmOdbData(m_ObdData);
 			m_RpmView.setmOdbData(m_ObdData);
+			m_SpeedView.setmOdbData(m_ObdData);
 
 			// Do it all again in 100 ms
 			m_Handler.postDelayed(m_Updater, 100);
@@ -132,39 +128,5 @@ public class MainActivity extends Activity implements
 		super.onStop();
 
 		m_Obd.stopObdConnection();
-	}
-
-	/**************************************************************************/
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.mainmenu, menu);
-		return true;
-	}
-
-	/**************************************************************************/
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case R.id.miPreferences:
-			Intent intent = new Intent(this, MainPrefsActivity.class);
-			startActivity(intent);
-			return true;
-		default:
-			return super.onOptionsItemSelected(item);
-		}
-	}
-
-	/**************************************************************************/
-	@Override
-	public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-		if (key.equals("P")) {
-			Integer p = prefs.getInt(key, 0);
-			m_ObdData.p_gain = p;
-			Log.d(TAG, "P: " + p.toString());
-		}
-		if (key.equals("I")) {
-			Integer i = prefs.getInt(key, 0);
-			m_ObdData.i_gain = i;
-			Log.d(TAG, "I: " + i.toString());
-		}
 	}
 }

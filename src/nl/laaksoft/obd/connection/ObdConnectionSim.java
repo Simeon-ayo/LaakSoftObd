@@ -1,11 +1,12 @@
-package nl.laaksoft.obd;
+package nl.laaksoft.obd.connection;
 
-import nl.laaksoft.obd.VehicleData.Gear;
+import nl.laaksoft.obd.connection.VehicleData.Gear;
+
 
 public class ObdConnectionSim implements IObdConnection
 {
     private boolean m_Acc;
-    private Gear m_SimGear;
+	private Gear m_SimGear;
 
     public ObdConnectionSim()
     {
